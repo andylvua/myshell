@@ -1,0 +1,10 @@
+//
+// Created by andrew on 10/9/23.
+//
+
+#ifndef MYSHELL_MSH_HISTORY_H
+#define MYSHELL_MSH_HISTORY_H
+
+constexpr char MSH_HISTORY_PATH[] = "@MSH_HISTORY_PATH@";
+
+#endif //MYSHELL_MSH_HISTORY_H

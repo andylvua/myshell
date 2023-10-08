@@ -1,0 +1,13 @@
+//
+// Created by andrew on 10/8/23.
+//
+
+#ifndef MYSHELL_MSH_EXTERNAL_H
+#define MYSHELL_MSH_EXTERNAL_H
+
+constexpr char MSH_EXTERNAL_BIN_PATH[] = "@EXTERNAL_BIN_PATH@";
+constexpr char EXTERNAL[] = "@EXTERNAL@";
+
+bool is_msh_external(const char *cmd);
+
+#endif //MYSHELL_MSH_EXTERNAL_H

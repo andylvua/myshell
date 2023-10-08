@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.15)
 
 #! CHANGE YOUR PROJECT NAME
 #  It is used as your project's main executable name. 
-set(PROJECT_NAME template)
+set(PROJECT_NAME myshell)
 project(${PROJECT_NAME} C CXX) # project(${PROJECT_NAME} C CXX ASM)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -55,17 +55,41 @@ include(cmake/CompilerWarnings.cmake)
 ##########################################################
 
 #! Project main executable source compilation
-add_executable(${PROJECT_NAME} main.cpp
-				options_parser/options_parser.cpp options_parser/options_parser.h)
+
+# Define sources and includes via globbing for convenience, but exclude src/external from sources
+file(GLOB_RECURSE SOURCES src/*.cpp)
+list(FILTER SOURCES EXCLUDE REGEX "src/external/.*")
+file(GLOB_RECURSE HEADERS inc/*)
+
+# Add external programs
+include(src/external/ExternalPrograms.cmake)
+message(STATUS "External programs: ${EXTERNAL}")
+message(STATUS "External programs binary path: ${EXTERNAL_BIN_PATH}")
+
+# Configure external programs header
+configure_file(src/external/msh_external.h.in ${CMAKE_BINARY_DIR}/generated/msh_external.h)
+# Configure history file path
+set(MSH_HISTORY_PATH "${CMAKE_BINARY_DIR}/.msh_history")
+message(STATUS "History file path: ${MSH_HISTORY_PATH}. Override if needed.")
+configure_file(src/internal/msh_history.h.in ${CMAKE_BINARY_DIR}/generated/msh_history.h)
+
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS}
+		src/external/msh_external.h.in
+		src/external/msh_external.cpp)
 
 #! Put path to your project headers
 target_include_directories(${PROJECT_NAME} PRIVATE options_parser)
+target_include_directories(${PROJECT_NAME} PRIVATE inc)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated)
 
 #! Add external packages
 # options_parser requires boost::program_options library
-find_package(Boost 1.71.0 COMPONENTS program_options system REQUIRED)
+find_package(Boost 1.71.0 REQUIRED COMPONENTS program_options filesystem system)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} Boost::program_options Boost::system)
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+
+# readline library
+target_link_libraries(${PROJECT_NAME} readline)
 
 ##########################################################
 # Fixed CMakeLists.txt part
