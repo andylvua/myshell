@@ -134,11 +134,11 @@ command parse_input(std::string input) {
 
 
     std::vector<std::string> args;
-    std::string cmd;
-
     if (process_tokens(tokens, args) != 0) {
         return {};
     }
+
+    std::string cmd = args[0];
 
     auto exec_func = is_builtin(cmd) ? internal_commands[cmd] : fork_exec;
     return {cmd, args, exec_func};

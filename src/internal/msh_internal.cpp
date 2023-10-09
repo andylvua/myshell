@@ -24,6 +24,8 @@ std::map<TokenType, int> token_flags = {
         {TokenType::SEMICOLON, UNSUPPORTED},
 };
 
+// Yeeep, lots of unsupported shit happening here. To be completed later. God knows when tho...
+
 variable *get_variable(const std::string &name) {
     for (auto &var : variables) {
         if (var.name == name) {
@@ -40,4 +42,21 @@ void set_variable(const std::string &name, const std::string &value) {
     } else {
         var->value = value;
     }
+}
+
+void init() {
+    extern char** environ;
+    for (char** env = environ; *env != nullptr; ++env) {
+        std::string env_string(*env);
+        size_t pos = env_string.find('=');
+        if (pos != std::string::npos) {
+            std::string name = env_string.substr(0, pos);
+            std::string value = env_string.substr(pos + 1);
+            set_variable(name, value);
+        }
+    }
+
+    set_variable("SHELL", SHELL);
+    setenv("SHELL", SHELL, 1);
+    set_variable("VERSION", VERSION);
 }

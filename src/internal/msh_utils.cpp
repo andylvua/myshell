@@ -8,15 +8,12 @@
 #include "types/msh_command.h"
 #include "types/msh_variable.h"
 #include "types/msh_token.h"
-#include "internal/msh_builtin.h"
 #include "internal/msh_utils.h"
-#include "internal/msh_exec.h"
 #include "internal/msh_internal.h"
 
 #include <glob.h>
 #include <vector>
 #include <algorithm>
-#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
 std::string generate_prompt() {
