@@ -4,6 +4,7 @@
 #include "internal/msh_builtin.h"
 #include "internal/msh_utils.h"
 #include "internal/msh_parser.h"
+#include "internal/msh_internal.h"
 
 #include "msh_history.h"
 
@@ -15,6 +16,7 @@ void on_exit() {
 }
 
 int main(int argc, char *argv[]) {
+    init();
     atexit(on_exit);
 
     if (argc > 1) {

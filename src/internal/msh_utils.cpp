@@ -15,12 +15,9 @@
 #include <vector>
 #include <algorithm>
 #include <boost/filesystem.hpp>
+#include <boost/date_time.hpp>
+#include <boost/asio.hpp>
 
-std::string generate_prompt() {
-    using boost::filesystem::current_path;
-    std::string path = current_path().string();
-    return path + " $ ";
-}
 
 void print_error(const std::string &msg) {
     std::cerr << "myshell: " << msg << std::endl;
@@ -123,4 +120,3 @@ int process_tokens(std::vector<Token> &tokens, std::vector<std::string> &args) {
     }
     return 0;
 }
-
