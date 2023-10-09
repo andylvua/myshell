@@ -1,8 +1,12 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
 //
 // Created by andrew on 10/8/23.
 //
 
 #include "internal/msh_builtin.h"
+#include "internal/msh_internal.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -33,6 +37,7 @@ int mexport(int argc, char **argv) {
         std::cout << "Couldn't set environment variable " << var << std::endl;
         return 1;
     }
+    set_variable(var, value);
 
     return 0;
 }

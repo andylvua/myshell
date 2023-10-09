@@ -1,3 +1,6 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
 //
 // Created by andrew on 10/8/23.
 //
@@ -13,14 +16,17 @@
 #include <iostream>
 
 struct command {
+    using func_t = int (*)(int argc, char **argv);
+
     std::string cmd;
     std::vector<std::string> argv;
     std::vector<char *> argv_c;
     int argc;
+    func_t func;
 
-    int (*func)(int argc, char **argv);
+    command() : cmd(), argv(), argv_c(), argc(0), func(nullptr) {}
 
-    command(std::string cmd, std::vector<std::string> args, int (*func)(int argc, char **argv)):
+    command(std::string cmd, std::vector<std::string> args, int (*func)(int argc, char **argv)) :
             cmd(std::move(cmd)), argv(std::move(args)), func(func) {
         argc = static_cast<int>(this->argv.size());
         for (auto &arg: argv) {

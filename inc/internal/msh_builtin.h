@@ -5,16 +5,18 @@
 #ifndef TEMPLATE_MSH_BUILTIN_H
 #define TEMPLATE_MSH_BUILTIN_H
 
+#include "types/msh_command.h"
+
 #include <map>
 #include <string>
 #include <cstring>
 #include <iostream>
 
-extern std::map<std::string, int (*)(int, char **)> internal_commands;
+extern std::map<std::string, command::func_t> internal_commands;
 
 bool handle_help(int argc, char **argv, const char *doc, const char *args_doc);
 
-bool is_internal(const std::string &cmd);
+bool is_builtin(const std::string &cmd);
 
 int merrno(int argc, char **argv);
 

@@ -1,10 +1,13 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
 //
 // Created by andrew on 10/8/23.
 //
 
 #include "internal/msh_builtin.h"
 
-std::map<std::string, int (*)(int, char **)> internal_commands = {
+std::map<std::string, command::func_t> internal_commands = {
         {"merrno",  merrno},
         {"mpwd",    mpwd},
         {"mcd",     mcd},
@@ -15,7 +18,7 @@ std::map<std::string, int (*)(int, char **)> internal_commands = {
         {".",       msource},
 };
 
-bool is_internal(const std::string &cmd) {
+bool is_builtin(const std::string &cmd) {
     return internal_commands.find(cmd) != internal_commands.end();
 }
 

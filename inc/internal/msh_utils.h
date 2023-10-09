@@ -11,17 +11,18 @@
 #include <vector>
 
 #include "types/msh_command.h"
+#include "types/msh_token.h"
 
-std::string prompt();
+std::string generate_prompt();
 
 void print_error(const std::string &msg);
 
-void expand_glob(std::vector<std::string> &args);
+void set_variables(std::vector<Token> &tokens);
 
-void expand_vars(std::vector<std::string> &args);
+void expand_glob(std::vector<Token> &tokens);
 
-void strip_comments(std::string &input);
+void expand_vars(std::vector<Token> &tokens);
 
-command parse_input(std::string input);
+int process_tokens(std::vector<Token> &tokens, std::vector<std::string> &args);
 
 #endif //TEMPLATE_UTILS_H

@@ -1,9 +1,13 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
 //
 // Created by andrew on 10/8/23.
 //
 
 #include "internal/msh_builtin.h"
 #include "internal/msh_utils.h"
+#include "internal/msh_parser.h"
 
 #include <fstream>
 

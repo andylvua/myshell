@@ -3,6 +3,8 @@
 
 #include "internal/msh_builtin.h"
 #include "internal/msh_utils.h"
+#include "internal/msh_parser.h"
+
 #include "msh_history.h"
 
 #include <readline/readline.h>
@@ -23,7 +25,7 @@ int main(int argc, char *argv[]) {
     char *input_buffer;
     read_history(MSH_HISTORY_PATH);
 
-    while ((input_buffer = readline(prompt().data())) != nullptr) {
+    while ((input_buffer = readline(generate_prompt().data())) != nullptr) {
         add_history(input_buffer);
 
         auto command = parse_input(input_buffer);
