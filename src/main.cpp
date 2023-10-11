@@ -16,7 +16,7 @@ void on_exit() {
 }
 
 int main(int argc, char *argv[]) {
-    init();
+    msh_init();
     atexit(on_exit);
 
     if (argc > 1) {

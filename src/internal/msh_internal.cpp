@@ -45,7 +45,7 @@ void set_variable(const std::string &name, const std::string &value) {
     }
 }
 
-void init() {
+void msh_init() {
     extern char** environ;
     for (char** env = environ; *env != nullptr; ++env) {
         std::string env_string(*env);

@@ -92,7 +92,7 @@ void expand_aliases(std::vector<Token> &tokens) {
 }
 
 void expand_vars(std::vector<Token> &tokens) {
-    std::string stop_chars = "$\'\" \t";
+    std::string stop_chars = "$=:\'\" \t\n";
 
     for (auto &token: tokens) {
         if (not(token_flags[token.type] & VAR_NO_EXPAND)) {
@@ -116,12 +116,12 @@ void expand_vars(std::vector<Token> &tokens) {
                         continue;
                     }
                     auto var = getenv(var_name.data());
+                    i += var_name.size();
+
                     if (var == nullptr) {
-                        new_value += '$';
                         continue;
                     }
                     new_value += var;
-                    i += var_name.size();
                 } else {
                     new_value += token.value[i];
                 }
@@ -176,5 +176,6 @@ int process_tokens(std::vector<Token> &tokens, std::vector<std::string> &args) {
             args.push_back(arg);
         }
     }
+
     return 0;
 }

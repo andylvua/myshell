@@ -15,6 +15,12 @@
 
 #include "msh_external.h"
 
+// Define GNU extension for execvpe on some systems
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+
 int fork_exec(int, char **argv) {
     int pid = fork();
     int status;

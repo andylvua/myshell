@@ -17,6 +17,6 @@ variable *get_variable(const std::string &name);
 
 void set_variable(const std::string &name, const std::string &value);
 
-void init();
+void msh_init();
 
 #endif //MYSHELL_MSH_INTERNAL_H
