@@ -42,10 +42,16 @@ void set_variables(std::vector<Token> &tokens) {
             set_variable(var_name, var_value);
         }
     }
+
+    tokens.erase(std::remove_if(tokens.begin(), tokens.end(), [](const Token &token) {
+        return token.type == VAR_DECL;
+    }), tokens.end());
+
 }
 
 void expand_aliases(std::vector<Token> &tokens) {
-    std::list<std::string> expanded;
+    std::vector<std::string> expanded;
+    expanded.reserve(aliases.size());
     std::stack<std::pair<int, std::vector<Token>>> stack;
     stack.emplace(0, tokens);
 
@@ -107,6 +113,7 @@ void expand_vars(std::vector<Token> &tokens) {
                         var_name += token.value[j];
                     }
                     if (var_name.empty()) {
+                        new_value += token.value[i];
                         continue;
                     }
                     auto internal_var = get_variable(var_name);
@@ -132,50 +139,67 @@ void expand_vars(std::vector<Token> &tokens) {
 }
 
 void expand_glob(std::vector<Token> &tokens) {
-    for (auto it = tokens.begin(); it != tokens.end(); ++it) {
-        if (not(token_flags[it->type] & GLOB_NO_EXPAND)) {
+    for (size_t i = 0; i < tokens.size(); i++) {
+        if (not(token_flags[tokens[i].type] & GLOB_NO_EXPAND)) {
             std::vector<Token> expanded_tokens;
 
             glob_t glob_result;
-            glob(it->value.data(), GLOB_TILDE, nullptr, &glob_result);
+            glob(tokens[i].value.data(), GLOB_TILDE, nullptr, &glob_result);
             if (glob_result.gl_pathc == 0) {
                 globfree(&glob_result);
                 continue;
             }
             for (size_t j = 0; j < glob_result.gl_pathc; j++) {
                 expanded_tokens.emplace_back(WORD, glob_result.gl_pathv[j]);
+                if (j != glob_result.gl_pathc - 1) {
+                    expanded_tokens.emplace_back(EMPTY);
+                }
             }
-            it = tokens.erase(it);
-            tokens.insert(it, expanded_tokens.begin(), expanded_tokens.end());
+            auto insert_to = tokens.begin() + static_cast<int>(i);
+            tokens.erase(insert_to);
+            tokens.insert(insert_to, expanded_tokens.begin(), expanded_tokens.end());
+            i += static_cast<int>(expanded_tokens.size()) - 1;
             globfree(&glob_result);
         }
     }
+}
+
+void squash_tokens(std::vector<Token> &tokens) {
+    for (size_t i = 0; i < tokens.size() - 1; i++) {
+        if (token_flags[tokens[i].type] & WORD_LIKE && token_flags[tokens[i + 1].type] & WORD_LIKE) {
+            tokens[i].value += tokens[i + 1].value;
+            tokens.erase(tokens.begin() + static_cast<int>(i) + 1);
+            i--;
+        }
+    }
+}
+
+void split_tokens(std::vector<Token> &tokens, std::vector<std::string> &args) {
+    for (auto &token: tokens) {
+        if (token_flags[token.type] & WORD_LIKE) {
+            args.push_back(token.value);
+        }
+    }
+}
+
+int check_syntax(std::vector<Token> &tokens) {
+    for (auto &token: tokens) {
+        if (token_flags[token.type] & UNSUPPORTED) {
+            print_error("Unsupported token: " + token.value);
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 int process_tokens(std::vector<Token> &tokens, std::vector<std::string> &args) {
     expand_aliases(tokens);
     expand_vars(tokens);
     set_variables(tokens);
+    squash_tokens(tokens);
     expand_glob(tokens);
+    split_tokens(tokens, args);
 
-    tokens.erase(std::remove_if(tokens.begin(), tokens.end(), [](const Token &token) {
-        return token.type == VAR_DECL;
-    }), tokens.end());
-
-    for (size_t i = 0; i < tokens.size(); i++) {
-        if (token_flags[tokens[i].type] & UNSUPPORTED) {
-            print_error("Unsupported token: " + tokens[i].value);
-            return 1;
-        }
-        if (token_flags[tokens[i].type] & WORD_LIKE) {
-            std::string arg = tokens[i].value;
-            while (i + 1 < tokens.size() && token_flags[tokens[i + 1].type] & WORD_LIKE) {
-                arg += tokens[i + 1].value;
-                i++;
-            }
-            args.push_back(arg);
-        }
-    }
-
-    return 0;
+    return check_syntax(tokens);
 }

@@ -23,6 +23,12 @@ void expand_glob(std::vector<Token> &tokens);
 
 void expand_vars(std::vector<Token> &tokens);
 
+void squash_tokens(std::vector<Token> &tokens);
+
+void split_tokens(std::vector<Token> &tokens, std::vector<std::string> &args);
+
+int check_syntax(std::vector<Token> &tokens);
+
 int process_tokens(std::vector<Token> &tokens, std::vector<std::string> &args);
 
 #endif //TEMPLATE_UTILS_H
