@@ -13,10 +13,17 @@ std::vector<Token> lexical_analysis(const std::string &input) {
     std::vector<Token> tokens;
     Token currentToken;
     bool is_quotes = false;
+    bool command_expected = true;
     size_t i = 0, len = input.length();
 
     while (i < len) {
         char current_char = input[i];
+
+        if (!tokens.empty() && tokens.back().type == WORD && command_expected) {
+            tokens.back().type = COMMAND;
+            command_expected = false;
+        }
+        command_expected |= token_flags[currentToken.type] & COMMAND_SEPARATOR;
 
         if (current_char == '\'' || current_char == '\"') {
             is_quotes = !is_quotes;
@@ -75,7 +82,7 @@ std::vector<Token> lexical_analysis(const std::string &input) {
                 currentToken = Token(SQSTRING, '\'');
                 break;
             case '=':
-                if (!is_quotes && currentToken.type == WORD) {
+                if (!is_quotes && command_expected) {
                     currentToken.type = VAR_DECL;
                 }
                 if (currentToken.type == EMPTY) {
@@ -95,11 +102,11 @@ std::vector<Token> lexical_analysis(const std::string &input) {
                 break;
             case '(':
                 tokens.push_back(currentToken);
-                currentToken = Token(SUBOPEN, '(');
+                currentToken = Token(SUBOPEN, "(");
                 break;
             case ')':
                 tokens.push_back(currentToken);
-                currentToken = Token(SUBCLOSE, ')');
+                currentToken = Token(SUBCLOSE, ")");
                 break;
             case ' ':
                 tokens.push_back(currentToken);
@@ -118,8 +125,9 @@ std::vector<Token> lexical_analysis(const std::string &input) {
     }
 
     tokens.push_back(currentToken);
-    if (tokens[0].type == EMPTY) {
-        tokens.erase(tokens.begin());
+    tokens.erase(tokens.begin());
+    if (!tokens.empty() && tokens.back().type == WORD && command_expected) {
+        tokens.back().type = COMMAND;
     }
     return tokens;
 }
@@ -132,14 +140,15 @@ command parse_input(std::string input) {
 
     std::vector<Token> tokens = lexical_analysis(input);
 
-
     std::vector<std::string> args;
     if (process_tokens(tokens, args) != 0) {
         return {};
     }
 
-    std::string cmd = args[0];
+    if (args.empty()) {
+        return {};
+    }
 
-    auto exec_func = is_builtin(cmd) ? internal_commands[cmd] : fork_exec;
-    return {cmd, args, exec_func};
+    auto exec_func = is_builtin(args[0]) ? internal_commands[args[0]] : fork_exec;
+    return {args, exec_func};
 }

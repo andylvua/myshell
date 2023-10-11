@@ -8,15 +8,19 @@
 #include "internal/msh_builtin.h"
 
 std::map<std::string, command::func_t> internal_commands = {
-        {"merrno",  merrno},
-        {"mpwd",    mpwd},
-        {"mcd",     mcd},
-        {"mexit",   mexit},
-        {"mecho",   mecho},
-        {"mexport", mexport},
-        {"msource", msource},
-        {".",       msource},
+        {"merrno",   merrno},
+        {"mpwd",     mpwd},
+        {"mcd",      mcd},
+        {"mexit",    mexit},
+        {"mecho",    mecho},
+        {"mexport",  mexport},
+        {"msource",  msource},
+        {".",        msource},
+        {"malias",   malias},
+        {"munalias", munalias},
 };
+
+std::map<std::string, std::string> aliases;
 
 bool is_builtin(const std::string &cmd) {
     return internal_commands.find(cmd) != internal_commands.end();

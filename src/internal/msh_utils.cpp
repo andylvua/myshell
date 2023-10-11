@@ -10,9 +10,13 @@
 #include "types/msh_token.h"
 #include "internal/msh_utils.h"
 #include "internal/msh_internal.h"
+#include "internal/msh_builtin.h"
+#include "internal/msh_parser.h"
 
 #include <glob.h>
 #include <vector>
+#include <list>
+#include <stack>
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
@@ -24,12 +28,65 @@ void print_error(const std::string &msg) {
 }
 
 void set_variables(std::vector<Token> &tokens) {
-    for (auto &token: tokens) {
+    for (auto it = tokens.begin(); it != tokens.end(); ++it) {
+        auto &token = *it;
         if (token.type == VAR_DECL) {
+            auto next_token = (it + 1);
+            if (next_token != tokens.end() && token_flags[next_token->type] & IS_STRING) {
+                token.value += next_token->value;
+                tokens.erase(next_token);
+            }
             auto pos = token.value.find('=');
             auto var_name = token.value.substr(0, pos);
             auto var_value = token.value.substr(pos + 1);
             set_variable(var_name, var_value);
+        }
+    }
+}
+
+void expand_aliases(std::vector<Token> &tokens) {
+    std::list<std::string> expanded;
+    std::stack<std::pair<int, std::vector<Token>>> stack;
+    stack.emplace(0, tokens);
+
+    size_t expansion_pointer = 0;
+    while (!stack.empty()) {
+        auto &curr_tokens = stack.top().second;
+
+        for (; expansion_pointer < curr_tokens.size(); expansion_pointer++) {
+            auto &token = curr_tokens[expansion_pointer];
+
+            if (token.type != COMMAND) {
+                continue;
+            }
+            if (std::find(expanded.begin(), expanded.end(), token.value) != expanded.end()) {
+                continue;
+            }
+
+            if (auto alias = aliases.find(token.value); alias != aliases.end()) {
+                expanded.push_back(token.value);
+                stack.emplace(expansion_pointer, lexical_analysis(alias->second));
+                expansion_pointer = 0;
+                break;
+            }
+        }
+
+        if (expansion_pointer >= curr_tokens.size()) {
+            auto [insert_to, top_tokens] = stack.top();
+
+            stack.pop();
+            if(stack.empty()) {
+                tokens = top_tokens;
+                continue;
+            }
+
+            auto &last_tokens = stack.top().second;
+
+            expanded.pop_back();
+            last_tokens.insert(last_tokens.begin() + insert_to + 1, top_tokens.begin(), top_tokens.end());
+            last_tokens.erase(last_tokens.begin() + insert_to);
+
+            expansion_pointer = insert_to + static_cast<int>(top_tokens.size());
         }
     }
 }
@@ -96,8 +153,9 @@ void expand_glob(std::vector<Token> &tokens) {
 }
 
 int process_tokens(std::vector<Token> &tokens, std::vector<std::string> &args) {
-    set_variables(tokens);
+    expand_aliases(tokens);
     expand_vars(tokens);
+    set_variables(tokens);
     expand_glob(tokens);
 
     tokens.erase(std::remove_if(tokens.begin(), tokens.end(), [](const Token &token) {

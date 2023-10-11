@@ -18,16 +18,15 @@
 struct command {
     using func_t = int (*)(int argc, char **argv);
 
-    std::string cmd;
     std::vector<std::string> argv;
     std::vector<char *> argv_c;
     int argc;
     func_t func;
 
-    command() : cmd(), argv(), argv_c(), argc(0), func(nullptr) {}
+    command() : argv(), argv_c(), argc(0), func(nullptr) {}
 
-    command(std::string cmd, std::vector<std::string> args, int (*func)(int argc, char **argv)) :
-            cmd(std::move(cmd)), argv(std::move(args)), func(func) {
+    command(std::vector<std::string> args, int (*func)(int argc, char **argv)) :
+            argv(std::move(args)), func(func) {
         argc = static_cast<int>(this->argv.size());
         for (auto &arg: argv) {
             argv_c.push_back(arg.data());
@@ -36,7 +35,7 @@ struct command {
     }
 
     void execute() const {
-        if (func == nullptr) {
+        if (func == nullptr || argc == 0) {
             return;
         }
         msh_errno = func(argc, const_cast<char **>(cargv()));
@@ -48,7 +47,7 @@ struct command {
 
     [[maybe_unused]] void print() const {
         std::cout << "command: ";
-        std::cout << cmd << std::endl;
+        std::cout << argv[0] << std::endl;
         std::cout << "argv: " << std::endl;
         for (auto &arg: argv) {
             std::cout << arg << std::endl;

@@ -9,19 +9,20 @@ std::vector<variable> variables;
 
 std::map<TokenType, int> token_flags = {
         {TokenType::WORD,      WORD_LIKE},
-        {TokenType::DQSTRING,  GLOB_NO_EXPAND | WORD_LIKE},
-        {TokenType::SQSTRING,  VAR_NO_EXPAND | GLOB_NO_EXPAND | WORD_LIKE},
+        {TokenType::COMMAND,   WORD_LIKE},
+        {TokenType::DQSTRING,  GLOB_NO_EXPAND | WORD_LIKE | IS_STRING},
+        {TokenType::SQSTRING,  VAR_NO_EXPAND | GLOB_NO_EXPAND | WORD_LIKE | IS_STRING},
         {TokenType::VAR_DECL,  0},
-        {TokenType::SUBOPEN,   UNSUPPORTED},
+        {TokenType::SUBOPEN,   UNSUPPORTED | COMMAND_SEPARATOR},
         {TokenType::SUBCLOSE,  UNSUPPORTED},
         {TokenType::COMMENT,   0},
-        {TokenType::AMP,       UNSUPPORTED},
+        {TokenType::AMP,       UNSUPPORTED | COMMAND_SEPARATOR},
         {TokenType::AND,       UNSUPPORTED},
-        {TokenType::PIPE,      UNSUPPORTED},
+        {TokenType::PIPE,      UNSUPPORTED | COMMAND_SEPARATOR},
         {TokenType::OR,        UNSUPPORTED},
         {TokenType::OUT,       UNSUPPORTED},
         {TokenType::IN,        UNSUPPORTED},
-        {TokenType::SEMICOLON, UNSUPPORTED},
+        {TokenType::SEMICOLON, UNSUPPORTED | COMMAND_SEPARATOR},
 };
 
 // Yeeep, lots of unsupported shit happening here. To be completed later. God knows when tho...
@@ -59,4 +60,6 @@ void init() {
     set_variable("SHELL", SHELL);
     setenv("SHELL", SHELL, 1);
     set_variable("VERSION", VERSION);
+
+    // TODO! Read some .mshrc file and execute it to support setup scripts
 }
