@@ -25,10 +25,10 @@ void expand_vars(std::vector<Token> &tokens);
 
 void squash_tokens(std::vector<Token> &tokens);
 
-void split_tokens(std::vector<Token> &tokens, std::vector<std::string> &args);
-
 int check_syntax(std::vector<Token> &tokens);
 
-int process_tokens(std::vector<Token> &tokens, std::vector<std::string> &args);
+std::vector<std::string> split_tokens(std::vector<Token> &tokens);
+
+int process_tokens(std::vector<Token> &tokens);
 
 #endif //TEMPLATE_UTILS_H

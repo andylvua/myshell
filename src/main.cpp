@@ -11,6 +11,15 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+/**
+ * @brief Write history to persistent file on exit.
+ *
+ * @note MSH_HISTORY_PATH is set automatically by the build system.
+ *
+ * @see MSH_HISTORY_PATH
+ * @see write_history
+ * @see atexit
+ */
 void on_exit() {
     write_history(MSH_HISTORY_PATH);
 }

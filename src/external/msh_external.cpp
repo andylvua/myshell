@@ -10,7 +10,17 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 
-bool is_msh_external(const char *cmd) {
+/**
+ * @brief Check if given command is myshell shipped external program based on the EXTERNAL variable.
+ * @param cmd Command to check.
+ * @return True if command is external, false otherwise.
+ *
+ * @note EXTERNAL variable is set by the build system. The external programs should
+ * be placed in {PROJECT_ROOT}/external directory to be automatically detected.
+ *
+ * @see EXTERNAL
+ */
+bool is_msh_external(const std::string &cmd) {
     std::string external(EXTERNAL);
     std::string delimiter = ";";
 

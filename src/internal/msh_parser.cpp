@@ -9,6 +9,12 @@
 
 #include <boost/algorithm/string.hpp>
 
+/**
+ * Perform lexical analysis on the given input string, breaking it down into a vector of tokens.
+ *
+ * @param input The input string to be analyzed.
+ * @return A vector of Token objects.
+ */
 std::vector<Token> lexical_analysis(const std::string &input) {
     std::vector<Token> tokens;
     Token currentToken;
@@ -129,9 +135,32 @@ std::vector<Token> lexical_analysis(const std::string &input) {
     if (!tokens.empty() && tokens.back().type == WORD && command_expected) {
         tokens.back().type = COMMAND;
     }
+
+//
+//    // print all tokens in form Type: <type> Value: <value>
+//    for (auto &token: tokens) {
+//        std::cout << "Type: " << token.type << " Value: " << token.value << std::endl;
+//    }
     return tokens;
 }
 
+/**
+ * @brief Parse the input string to prepare it for command execution.
+ *
+ * Performs lexical analysis
+ * to tokenize the input, and checks for validity. If the input is valid, it prepares the arguments and
+ * determines the execution function.
+ *
+ * @param input The input string to be parsed.
+ * @return A @c command object containing the arguments and execution function.
+ *
+ * @see lexical_analysis()
+ * @see process_tokens()
+ * @see split_tokens()
+ * @see fork_exec()
+ * @see internal_commands
+ * @see command
+ */
 command parse_input(std::string input) {
     boost::trim(input);
     if (input.empty()) {
@@ -140,11 +169,11 @@ command parse_input(std::string input) {
 
     std::vector<Token> tokens = lexical_analysis(input);
 
-    std::vector<std::string> args;
-    if (process_tokens(tokens, args) != 0) {
+    if (process_tokens(tokens) != 0) {
         return {};
     }
 
+    auto args = split_tokens(tokens);
     if (args.empty()) {
         return {};
     }

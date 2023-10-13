@@ -27,6 +27,11 @@ std::map<TokenType, int> token_flags = {
 
 // Yeeep, lots of unsupported shit happening here. To be completed later. God knows when tho...
 
+/**
+ * @brief Get a pointer to an internal variable with the given name.
+ * @param name Name of the variable.
+ * @return Pointer to the variable, @c nullptr otherwise
+ */
 variable *get_variable(const std::string &name) {
     for (auto &var : variables) {
         if (var.name == name) {
@@ -36,6 +41,11 @@ variable *get_variable(const std::string &name) {
     return nullptr;
 }
 
+/**
+ * @brief Set the value of an internal variable with the given name.
+ * @param name Name of the variable.
+ * @param value Value to set.
+ */
 void set_variable(const std::string &name, const std::string &value) {
     auto *var = get_variable(name);
     if (var == nullptr) {
@@ -45,6 +55,12 @@ void set_variable(const std::string &name, const std::string &value) {
     }
 }
 
+/**
+ * @brief Initialize the shell.
+ *
+ * Copies the current process environment variables internally.
+ * Sets the @c SHELL and @c VERSION to default values specified in msh_internal.h
+ */
 void msh_init() {
     extern char** environ;
     for (char** env = environ; *env != nullptr; ++env) {

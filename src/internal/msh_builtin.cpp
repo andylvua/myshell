@@ -7,6 +7,9 @@
 
 #include "internal/msh_builtin.h"
 
+/**
+ * @brief Map of internal commands and their corresponding functions.
+ */
 std::map<std::string, command::func_t> internal_commands = {
         {"merrno",   merrno},
         {"mpwd",     mpwd},
@@ -20,12 +23,28 @@ std::map<std::string, command::func_t> internal_commands = {
         {"munalias", munalias},
 };
 
+/**
+ * @brief Map of aliases.
+ */
 std::map<std::string, std::string> aliases;
 
+/**
+ * @brief Check if a command is a built-in command.
+ * @param cmd Command to check.
+ * @return True if command is built-in, false otherwise.
+ */
 bool is_builtin(const std::string &cmd) {
     return internal_commands.find(cmd) != internal_commands.end();
 }
 
+/**
+ * @brief Check if help flag is present in arguments and print help message if it is.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ * @param doc Documentation string.
+ * @param args_doc Arguments documentation string.
+ * @return True if help flag is present, false otherwise.
+ */
 bool handle_help(int argc, char **argv, const char *doc, const char *args_doc) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {

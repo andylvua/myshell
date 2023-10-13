@@ -21,6 +21,27 @@
 #endif
 
 
+/**
+ * @brief Forks and executes a command.
+ *
+ * If the command contains a slash, it is executed directly,
+ * meaning that user specified a path to the program. Otherwise, the command
+ * is searched in the PATH environment variable by execvpe.
+ *
+ * If the program is shipped with myshell, its path is determined based on the
+ * MSH_EXTERNAL_BIN_PATH variable set by the build system.
+ *
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ * @return Exit status of the command.
+ *
+ * @see is_msh_external
+ * @see MSH_EXTERNAL_BIN_PATH
+ * @see execvpe
+ * @see execve
+ * @see fork
+ * @see waitpid
+ */
 int fork_exec(int, char **argv) {
     int pid = fork();
     int status = 0;

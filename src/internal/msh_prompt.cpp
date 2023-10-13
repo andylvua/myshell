@@ -9,7 +9,27 @@
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/filesystem.hpp>
 
-
+/**
+ * @brief Expand a PS1 (Prompt String 1) format string into its corresponding values.
+ *
+ * This function takes a PS1 format string as input and processes escape sequences to replace them with
+ * specific values. The supported escape sequences include:
+ *
+ * <li>\\d - The current date in YYYY-MM-DD format.</li>
+ * <li>\\t - The current time in HH:MM:SS format.</li>
+ * <li>\\u - The current user.</li>
+ * <li>\\h - The current host.</li>
+ * <li>\\w - The current working directory.</li>
+ * <li>\\W - The current working directory's basename.</li>
+ * <li>\\n - A newline character.</li>
+ * <li>\\r - A carriage return character.</li>
+ * <li>\\s - The current shell.</li>
+ * <li>\\v - The current shell version.</li>
+ * <li>\\$ - The prompt character.</li>
+ *
+ * @param ps1 The PS1 format string to be expanded.
+ * @return The expanded string with replaced escape sequences.
+ */
 std::string expand_ps1(const std::string &ps1) {
     std::string result;
     for (size_t i = 0; i < ps1.size(); i++) {
@@ -66,6 +86,14 @@ std::string expand_ps1(const std::string &ps1) {
     return result;
 }
 
+/**
+ * @brief Generate a prompt string.
+ *
+ * This function generates a prompt string by expanding the PS1 environment variable.
+ * If the PS1 environment variable is not set, the default prompt defined in msh_prompt.h is used.
+ *
+ * @return The generated prompt string.
+ */
 std::string generate_prompt() {
    auto ps1 = getenv("PS1");
     if (ps1 == nullptr) {
