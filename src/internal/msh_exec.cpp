@@ -52,7 +52,7 @@ int fork_exec(int, char **argv) {
             execve(path.c_str(), argv, environ);
         } else if (std::string(argv[0]).find('/') != std::string::npos) {
             execve(argv[0], argv, environ);
-            print_error(strerror(errno));
+            print_error(std::string(argv[0]) + ": " + strerror(errno));
             status = UNKNOWN_ERROR;
         } else {
             execvpe(argv[0], argv, environ);

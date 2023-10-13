@@ -41,15 +41,16 @@ bool is_builtin(const std::string &cmd) {
  * @brief Check if help flag is present in arguments and print help message if it is.
  * @param argc Number of arguments.
  * @param argv Array of arguments.
- * @param doc Documentation string.
- * @param args_doc Arguments documentation string.
+ * @param doc Documentation of the command.
  * @return True if help flag is present, false otherwise.
  */
-bool handle_help(int argc, char **argv, const char *doc, const char *args_doc) {
+bool handle_help(int argc, char **argv, const builtin_doc &doc) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-            std::cout << doc << std::endl;
-            std::cout << "Usage: " << argv[0] << " " << args_doc << std::endl;
+            std::cout << doc.args << " -- " << doc.brief << "\n\n";
+            if (not doc.doc.empty()) {
+                std::cout << doc.doc << "\n\n";
+            }
             return true;
         }
     }

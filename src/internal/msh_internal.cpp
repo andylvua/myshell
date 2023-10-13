@@ -25,6 +25,9 @@ std::map<TokenType, int> token_flags = {
         {TokenType::SEMICOLON, UNSUPPORTED | COMMAND_SEPARATOR},
 };
 
+// MAYBE: Store token flags in the token itself. Could possibly be more clear and less error-prone
+//  In that case, properly handle TokenType in constructors and/or on type change operations
+
 // Yeeep, lots of unsupported shit happening here. To be completed later. God knows when tho...
 
 /**
@@ -77,5 +80,6 @@ void msh_init() {
     setenv("SHELL", SHELL, 1);
     set_variable("VERSION", VERSION);
 
-    // TODO! Read some .mshrc file and execute it to support setup scripts
+    // TODO! Read some .mshrc file and execute it to support setup scripts.
+    //  Path should be provided by the build system or via config file by the user
 }

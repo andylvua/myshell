@@ -11,10 +11,14 @@
 #include <cstring>
 #include <unistd.h>
 
-static char doc[] = "mpwd -- Print the current working directory.";
+static builtin_doc doc = {
+        .args   = "mpwd [-h|--help]",
+        .brief  = "Print the current working directory",
+        .doc    = "Returns 1 if any arguments specified or getcwd() fails, 0 otherwise."
+};
 
 int mpwd(int argc, char **argv) {
-    if (handle_help(argc, argv, doc, nullptr)) {
+    if (handle_help(argc, argv, doc)) {
         return 0;
     }
 

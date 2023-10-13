@@ -11,11 +11,15 @@
 
 #include <fstream>
 
-static char doc[] = "msource (.) -- Execute commands from a file in the current shell environment.";
-static char args_doc[] = "<file>";
+static builtin_doc doc = {
+        .args   = "msource (or .) <file> [-h|--help]",
+        .brief  = "Execute commands from a given file in the current shell.",
+        .doc    = "Reads commands from a given file line by line and executes them in the current shell.\n"
+                  "Returns 0 unless file can't be opened."
+};
 
 int msource(int argc, char **argv) {
-    if (handle_help(argc, argv, doc, args_doc)) {
+    if (handle_help(argc, argv, doc)) {
         return 0;
     }
 

@@ -11,10 +11,14 @@
 
 int msh_errno = 0;
 
-static char doc[] = "merrno -- Print the last error code.";
+static builtin_doc doc = {
+        .args   = "merrno [-h|--help]",
+        .brief  = "Print error code of the last command",
+        .doc    = "Returns 1 if any arguments specified, 0 otherwise."
+};
 
 int merrno(int argc, char **argv) {
-    if (handle_help(argc, argv, doc, nullptr)) {
+    if (handle_help(argc, argv, doc)) {
         return 0;
     }
 

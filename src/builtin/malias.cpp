@@ -4,16 +4,22 @@
 
 #include "internal/msh_builtin.h"
 
-static char doc[] = "malias -- Define or show aliases.";
-static char args_doc[] = "[name[=value]]...";
+static builtin_doc doc = {
+        .args   = "malias [name[=value] ...] [-h|--help]",
+        .brief  = "Create or print aliases",
+        .doc    = "Without arguments, prints all aliases.\n\n"
+                  "If arguments are given, creates an alias for each argument of the form NAME=VALUE\n"
+                  "or prints the value of the alias with the given name.\n\n"
+                  "Returns 0 unless an unknown alias is given."
+};
 
 int malias(int argc, char **argv) {
-    if (handle_help(argc, argv, doc, args_doc)) {
+    if (handle_help(argc, argv, doc)) {
         return 0;
     }
 
     if (argc == 1) {
-        for (auto &alias : aliases) {
+        for (auto &alias: aliases) {
             std::cout << "alias " << alias.first << "=" << "'" << alias.second << "'" << std::endl;
         }
         return 0;

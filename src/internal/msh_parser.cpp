@@ -69,15 +69,15 @@ std::vector<Token> lexical_analysis(const std::string &input) {
                 break;
             case '>':
                 tokens.push_back(currentToken);
-                currentToken = Token(OUT, '>');
+                currentToken = Token(OUT, ">");
                 break;
             case '<':
                 tokens.push_back(currentToken);
-                currentToken = Token(IN, '<');
+                currentToken = Token(IN, "<");
                 break;
             case ';':
                 tokens.push_back(currentToken);
-                currentToken = Token(SEMICOLON, ';');
+                currentToken = Token(SEMICOLON, ";");
                 break;
             case '\"':
                 tokens.push_back(currentToken);

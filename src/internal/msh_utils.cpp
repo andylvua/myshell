@@ -67,7 +67,7 @@ void set_variables(std::vector<Token> &tokens) {
     }), tokens.end());
 
     // TODO! Handle illegal variable names. Only valid variable declarations should be processed
-    //  and removed from the vector, otherwise they should be treated as WORD tokens.
+    //  and removed from the vector, otherwise they should be treated as WORD tokens and left unchanged
 }
 
 /**
@@ -152,44 +152,45 @@ void expand_aliases(std::vector<Token> &tokens) {
  */
 void expand_vars(std::vector<Token> &tokens) {
     std::string stop_chars = "$=:\'\" \t\n";
-    // TODO! Move to a global constant. Add variable declaration
-    //  syntax to documentation.
+    // TODO! Move to a global constant. Provide some documentation on
+    //  metacharacters and syntax used by the shell
 
     for (auto &token: tokens) {
-        if (not(token_flags[token.type] & VAR_NO_EXPAND)) {
-            std::string new_value;
-            for (size_t i = 0; i < token.value.size(); i++) {
-                if (token.value[i] == '$') {
-                    std::string var_name;
-                    for (size_t j = i + 1; j < token.value.size(); j++) {
-                        if (stop_chars.find(token.value[j]) != std::string::npos) {
-                            break;
-                        }
-                        var_name += token.value[j];
-                    }
-                    if (var_name.empty()) {
-                        new_value += token.value[i];
-                        continue;
-                    }
-                    auto internal_var = get_variable(var_name);
-                    if (internal_var != nullptr) {
-                        new_value += internal_var->value;
-                        i += var_name.size();
-                        continue;
-                    }
-                    auto var = getenv(var_name.data());
-                    i += var_name.size();
-
-                    if (var == nullptr) {
-                        continue;
-                    }
-                    new_value += var;
-                } else {
-                    new_value += token.value[i];
-                }
-            }
-            token.value = std::move(new_value);
+        if (token_flags[token.type] & VAR_NO_EXPAND) {
+            continue;
         }
+        std::string new_value;
+        for (size_t i = 0; i < token.value.size(); i++) {
+            if (token.value[i] == '$') {
+                std::string var_name;
+                for (size_t j = i + 1; j < token.value.size(); j++) {
+                    if (stop_chars.find(token.value[j]) != std::string::npos) {
+                        break;
+                    }
+                    var_name += token.value[j];
+                }
+                if (var_name.empty()) {
+                    new_value += token.value[i];
+                    continue;
+                }
+                auto internal_var = get_variable(var_name);
+                if (internal_var != nullptr) {
+                    new_value += internal_var->value;
+                    i += var_name.size();
+                    continue;
+                }
+                auto var = getenv(var_name.data());
+                i += var_name.size();
+
+                if (var == nullptr) {
+                    continue;
+                }
+                new_value += var;
+            } else {
+                new_value += token.value[i];
+            }
+        }
+        token.value = std::move(new_value);
     }
 }
 
@@ -211,28 +212,31 @@ void expand_vars(std::vector<Token> &tokens) {
  * @see glob
  */
 void expand_glob(std::vector<Token> &tokens) {
-    for (size_t i = 0; i < tokens.size(); i++) {
-        if (not(token_flags[tokens[i].type] & GLOB_NO_EXPAND)) {
-            std::vector<Token> expanded_tokens;
+    std::vector<Token> expanded_tokens;
 
-            glob_t glob_result;
-            glob(tokens[i].value.data(), GLOB_TILDE, nullptr, &glob_result);
-            if (glob_result.gl_pathc == 0) {
-                globfree(&glob_result);
-                continue;
-            }
-            for (size_t j = 0; j < glob_result.gl_pathc; j++) {
-                expanded_tokens.emplace_back(WORD, glob_result.gl_pathv[j]);
-                if (j != glob_result.gl_pathc - 1) {
-                    expanded_tokens.emplace_back(EMPTY);
-                }
-            }
-            auto insert_to = tokens.begin() + static_cast<int>(i);
-            tokens.erase(insert_to);
-            tokens.insert(insert_to, expanded_tokens.begin(), expanded_tokens.end());
-            i += static_cast<int>(expanded_tokens.size()) - 1;
-            globfree(&glob_result);
+    for (size_t i = 0; i < tokens.size(); i++) {
+        if (token_flags[tokens[i].type] & VAR_NO_EXPAND) {
+            continue;
         }
+        glob_t glob_result;
+        glob(tokens[i].value.data(), GLOB_TILDE, nullptr, &glob_result);
+        if (glob_result.gl_pathc == 0) {
+            globfree(&glob_result);
+            continue;
+        }
+        expanded_tokens.reserve(glob_result.gl_pathc * 2 - 1);
+        for (size_t j = 0; j < glob_result.gl_pathc; j++) {
+            expanded_tokens.emplace_back(WORD, glob_result.gl_pathv[j]);
+            if (j != glob_result.gl_pathc - 1) {
+                expanded_tokens.emplace_back(EMPTY);
+            }
+        }
+        auto insert_to = tokens.begin() + static_cast<int>(i);
+        tokens.erase(insert_to);
+        tokens.insert(insert_to, expanded_tokens.begin(), expanded_tokens.end());
+        i += static_cast<int>(expanded_tokens.size()) - 1;
+        globfree(&glob_result);
+        expanded_tokens.clear();
     }
 }
 
@@ -313,10 +317,14 @@ std::vector<std::string> split_tokens(std::vector<Token> &tokens) {
  */
 int process_tokens(std::vector<Token> &tokens) {
     expand_aliases(tokens);
+
+    if (check_syntax(tokens) != 0) {
+        return 1;
+    }
+
     expand_vars(tokens);
     set_variables(tokens);
     expand_glob(tokens);
     squash_tokens(tokens);
-
-    return check_syntax(tokens);
+    return 0;
 }

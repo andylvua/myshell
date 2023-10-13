@@ -24,6 +24,8 @@ void on_exit() {
     write_history(MSH_HISTORY_PATH);
 }
 
+// MAYBE: Add signal handling
+//  Possible behavior: https://www.gnu.org/software/bash/manual/html_node/Signals.html
 int main(int argc, char *argv[]) {
     msh_init();
     atexit(on_exit);

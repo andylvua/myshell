@@ -4,11 +4,15 @@
 
 #include "internal/msh_builtin.h"
 
-static char doc[] = "munalias -- Remove aliases.";
-static char args_doc[] = "<alias>...";
+static builtin_doc doc = {
+        .args   = "munalias <alias>... [-h|--help]",
+        .brief  = "Remove aliases.",
+        .doc    = "Removes aliases from the list of aliases.\n"
+                  "Returns 0 unless alias is not found or no arguments are given."
+};
 
 int munalias(int argc, char **argv) {
-    if (handle_help(argc, argv, doc, args_doc)) {
+    if (handle_help(argc, argv, doc)) {
         return 0;
     }
 

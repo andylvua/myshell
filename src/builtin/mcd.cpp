@@ -10,11 +10,15 @@
 #include <iostream>
 #include <unistd.h>
 
-static char doc[] = "mcd -- Change the shell working directory.";
-static char args_doc[] = "<path>";
+static builtin_doc doc = {
+        .args   = "mcd <path> [-h|--help]",
+        .brief  = "Change working directory",
+        .doc    = "Returns 0 unless given wrong number of arguments or chdir() fails."
+};
+
 
 int mcd(int argc, char **argv) {
-    if (handle_help(argc, argv, doc, args_doc)) {
+    if (handle_help(argc, argv, doc)) {
         return 0;
     }
 

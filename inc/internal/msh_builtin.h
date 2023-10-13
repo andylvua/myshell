@@ -6,6 +6,7 @@
 #define TEMPLATE_MSH_BUILTIN_H
 
 #include "types/msh_command.h"
+#include "types/msh_builtin_doc.h"
 
 #include <map>
 #include <string>
@@ -16,7 +17,7 @@ extern std::map<std::string, command::func_t> internal_commands;
 
 extern std::map<std::string, std::string> aliases;
 
-bool handle_help(int argc, char **argv, const char *doc, const char *args_doc);
+bool handle_help(int argc, char **argv, const builtin_doc &doc);
 
 bool is_builtin(const std::string &cmd);
 

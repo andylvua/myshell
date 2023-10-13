@@ -9,11 +9,16 @@
 
 #include <iostream>
 
-static char doc[] = "mexit -- Exit the shell with a status of N. If N is omitted, the exit status is 0.";
-static char args_doc[] = "<N>";
+static builtin_doc doc = {
+        .args   = "mexit [code] [-h|--help]",
+        .brief  = "Exit the shell",
+        .doc    = "Exits the shell with a status of code given as an argument.\n"
+                  "If no argument is given exits with a status of 0.\n"
+                  "Doesn't return unless given wrong number of arguments or code is invalid."
+};
 
 int mexit(int argc, char **argv) {
-    if (handle_help(argc, argv, doc, args_doc)) {
+    if (handle_help(argc, argv, doc)) {
         return 0;
     }
 
@@ -24,5 +29,14 @@ int mexit(int argc, char **argv) {
         std::cout << "Usage: mexit <code>" << std::endl;
         return 1;
     }
-    exit(std::stoi(argv[1]));
+
+    try {
+        exit(std::stoi(argv[1]));
+    } catch (std::invalid_argument &e) {
+        std::cout << "mexit: invalid argument: " << argv[1] << std::endl;
+        return 1;
+    } catch (std::out_of_range &e) {
+        std::cout << "mexit: argument out of range: " << argv[1] << std::endl;
+        return 1;
+    }
 }
