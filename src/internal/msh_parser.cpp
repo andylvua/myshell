@@ -160,7 +160,7 @@ std::vector<Token> lexical_analysis(const std::string &input) {
  * @see lexical_analysis()
  * @see process_tokens()
  * @see split_tokens()
- * @see fork_exec()
+ * @see msh_exec()
  * @see internal_commands
  * @see command
  */
@@ -181,6 +181,6 @@ command parse_input(std::string input) {
         return {};
     }
 
-    auto exec_func = is_builtin(args[0]) ? internal_commands[args[0]] : fork_exec;
+    auto exec_func = is_builtin(args[0]) ? internal_commands[args[0]] : msh_exec;
     return {args, exec_func};
 }

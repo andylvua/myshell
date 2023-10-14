@@ -24,15 +24,6 @@
 
 
 /**
- * @brief Print an error message to stderr with a `myshell: ` prefix.
- *
- * @param msg Error message.
- */
-void print_error(const std::string &msg) {
-    std::cerr << "myshell: " << msg << std::endl;
-}
-
-/**
  * Sets internal variables based on VAR_DECL tokens in a vector of tokens.
  *
  * Iterates through a vector of tokens, identifies VAR_DECL tokens, and sets corresponding

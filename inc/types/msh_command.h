@@ -8,7 +8,7 @@
 #ifndef TEMPLATE_MSH_COMMAND_H
 #define TEMPLATE_MSH_COMMAND_H
 
-#include "internal/msh_errno.h"
+#include "internal/msh_error.h"
 
 #include <string>
 #include <vector>

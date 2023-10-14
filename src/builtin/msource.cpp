@@ -7,7 +7,7 @@
 
 #include "internal/msh_builtin.h"
 #include "internal/msh_utils.h"
-#include "internal/msh_parser.h"
+#include "internal/msh_exec.h"
 
 #include <fstream>
 
@@ -28,10 +28,7 @@ int msource(int argc, char **argv) {
         std::cout << "Couldn't open file " << argv[1] << std::endl;
         return 1;
     }
-    std::string line;
-    while (std::getline(script, line)) {
-        auto command = parse_input(line);
-        command.execute();
-    }
+
+    msh_exec_script(argv[1]);
     return 0;
 }

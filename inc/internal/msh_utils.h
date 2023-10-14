@@ -15,8 +15,6 @@
 
 std::string generate_prompt();
 
-void print_error(const std::string &msg);
-
 void set_variables(std::vector<Token> &tokens);
 
 void expand_glob(std::vector<Token> &tokens);
