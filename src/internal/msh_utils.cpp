@@ -206,7 +206,7 @@ void expand_glob(std::vector<Token> &tokens) {
     std::vector<Token> expanded_tokens;
 
     for (size_t i = 0; i < tokens.size(); i++) {
-        if (token_flags[tokens[i].type] & VAR_NO_EXPAND) {
+        if (token_flags[tokens[i].type] & GLOB_NO_EXPAND) {
             continue;
         }
         glob_t glob_result;

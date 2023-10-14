@@ -11,9 +11,12 @@
 
 std::vector<variable> variables;
 
+// MAYBE: Store token flags in the token itself. Could possibly be more clear and less error-prone
+//  In that case, properly handle TokenType in constructors and/or on type change operations
+
 std::map<TokenType, int> token_flags = {
         {TokenType::WORD,      WORD_LIKE},
-        {TokenType::COMMAND,   WORD_LIKE},
+        {TokenType::COMMAND,   WORD_LIKE | GLOB_NO_EXPAND},
         {TokenType::DQSTRING,  GLOB_NO_EXPAND | WORD_LIKE | IS_STRING},
         {TokenType::SQSTRING,  VAR_NO_EXPAND | GLOB_NO_EXPAND | WORD_LIKE | IS_STRING},
         {TokenType::VAR_DECL,  0},
@@ -28,11 +31,11 @@ std::map<TokenType, int> token_flags = {
         {TokenType::IN,        UNSUPPORTED},
         {TokenType::SEMICOLON, UNSUPPORTED | COMMAND_SEPARATOR},
 };
+/*NOTE:
+ * For COMMAND, GLOB_NO_EXPAND flag is set due to requirement "We ignore masks in the program name."
+ * However, this behavior is unnatural.
+ */
 
-// MAYBE: Store token flags in the token itself. Could possibly be more clear and less error-prone
-//  In that case, properly handle TokenType in constructors and/or on type change operations
-
-// Yeeep, lots of unsupported shit happening here. To be completed later. God knows when tho...
 
 /**
  * @brief Get a pointer to an internal variable with the given name.
