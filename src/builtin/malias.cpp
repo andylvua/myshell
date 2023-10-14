@@ -7,7 +7,7 @@
 
 #include "internal/msh_builtin.h"
 
-static builtin_doc doc = {
+static const builtin_doc doc = {
         .args   = "malias [name[=value] ...] [-h|--help]",
         .brief  = "Create or print aliases",
         .doc    = "Without arguments, prints all aliases.\n\n"
@@ -22,8 +22,8 @@ int malias(int argc, char **argv) {
     }
 
     if (argc == 1) {
-        for (auto &alias: aliases) {
-            std::cout << "alias " << alias.first << "=" << "'" << alias.second << "'" << std::endl;
+        for (auto const& [name, value] : aliases) {
+            std::cout << "alias " << name << "=" << "'" << value << "'" << std::endl;
         }
         return 0;
     }
@@ -32,7 +32,7 @@ int malias(int argc, char **argv) {
         auto arg = std::string(argv[i]);
         auto pos = arg.find('=');
         if (pos == std::string::npos) {
-            if (aliases.find(arg) != aliases.end()) {
+            if (aliases.contains(arg)) {
                 std::cout << "alias " << arg << "=" << "'" << aliases[arg] << "'" << std::endl;
             } else {
                 std::cout << "alias " << arg << " not found" << std::endl;

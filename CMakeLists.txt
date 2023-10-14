@@ -69,20 +69,18 @@ message(STATUS "External programs binary path: ${EXTERNAL_BIN_PATH}")
 # Configure external programs header
 configure_file(src/templates/msh_external.h.in ${CMAKE_BINARY_DIR}/generated/msh_external.h)
 # Configure history file path
-set(MSH_HISTORY_PATH "${CMAKE_BINARY_DIR}/.msh_history")
+set(MSH_HISTORY_PATH "${CMAKE_BINARY_DIR}/msh/.msh_history")
 message(STATUS "History file path: ${MSH_HISTORY_PATH}. Override if needed.")
 configure_file(src/templates/msh_history.h.in ${CMAKE_BINARY_DIR}/generated/msh_history.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 #! Put path to your project headers
-target_include_directories(${PROJECT_NAME} PRIVATE options_parser)
 target_include_directories(${PROJECT_NAME} PRIVATE inc)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated)
 
 #! Add external packages
-# options_parser requires boost::program_options library
-find_package(Boost 1.71.0 REQUIRED COMPONENTS program_options filesystem system)
+find_package(Boost 1.71.0 REQUIRED COMPONENTS filesystem system)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 

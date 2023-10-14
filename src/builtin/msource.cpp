@@ -11,7 +11,7 @@
 
 #include <fstream>
 
-static builtin_doc doc = {
+static const builtin_doc doc = {
         .args   = "msource (or .) <file> [-h|--help]",
         .brief  = "Execute commands from a given file in the current shell.",
         .doc    = "Reads commands from a given file line by line and executes them in the current shell.\n"
@@ -23,8 +23,7 @@ int msource(int argc, char **argv) {
         return 0;
     }
 
-    std::ifstream script(argv[1]);
-    if (!script.good()) {
+    if (std::ifstream script(argv[1]); !script.good()) {
         std::cout << "Couldn't open file " << argv[1] << std::endl;
         return 1;
     }

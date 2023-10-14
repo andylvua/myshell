@@ -23,13 +23,14 @@ std::vector<Token> lexer(const std::string &input) {
     Token currentToken;
     bool is_quotes = false;
     bool command_expected = true;
-    size_t i = 0, len = input.length();
+    size_t i = 0;
+    size_t len = input.length();
 
     while (i < len) {
         char current_char = input[i];
 
-        if (!tokens.empty() && tokens.back().type == WORD && command_expected) {
-            tokens.back().type = COMMAND;
+        if (!tokens.empty() && tokens.back().type == TokenType::WORD && command_expected) {
+            tokens.back().type = TokenType::COMMAND;
             command_expected = false;
         }
         command_expected |= token_flags[currentToken.type] & COMMAND_SEPARATOR;
@@ -49,61 +50,61 @@ std::vector<Token> lexer(const std::string &input) {
 
         switch (current_char) {
             case '\\':
-                if (currentToken.type != WORD) {
+                if (currentToken.type != TokenType::WORD) {
                     tokens.push_back(currentToken);
-                    currentToken = Token(WORD);
+                    currentToken = Token(TokenType::WORD);
                 }
                 i++;
                 currentToken.value += input[i];
                 break;
             case '&':
-                if (currentToken.type == AMP) currentToken.type = AND;
+                if (currentToken.type == TokenType::AMP) currentToken.type = TokenType::AND;
                 else {
                     tokens.push_back(currentToken);
-                    currentToken = Token(AMP, "&");
+                    currentToken = Token(TokenType::AMP, "&");
                 }
                 break;
             case '|':
-                if (currentToken.type == PIPE) currentToken.type = OR;
+                if (currentToken.type == TokenType::PIPE) currentToken.type = TokenType::OR;
                 else {
                     tokens.push_back(currentToken);
-                    currentToken = Token(PIPE, "|");
+                    currentToken = Token(TokenType::PIPE, "|");
                 }
                 break;
             case '>':
                 tokens.push_back(currentToken);
-                currentToken = Token(OUT, ">");
+                currentToken = Token(TokenType::OUT, ">");
                 break;
             case '<':
                 tokens.push_back(currentToken);
-                currentToken = Token(IN, "<");
+                currentToken = Token(TokenType::IN, "<");
                 break;
             case ';':
                 tokens.push_back(currentToken);
-                currentToken = Token(SEMICOLON, ";");
+                currentToken = Token(TokenType::SEMICOLON, ";");
                 break;
             case '\"':
                 tokens.push_back(currentToken);
-                currentToken = Token(DQSTRING, '\"');
+                currentToken = Token(TokenType::DQSTRING, '\"');
                 break;
             case '\'':
                 tokens.push_back(currentToken);
-                currentToken = Token(SQSTRING, '\'');
+                currentToken = Token(TokenType::SQSTRING, '\'');
                 break;
             case '=':
                 if (!is_quotes && command_expected) {
-                    currentToken.type = VAR_DECL;
+                    currentToken.type = TokenType::VAR_DECL;
                 }
-                if (currentToken.type == EMPTY) {
+                if (currentToken.type == TokenType::EMPTY) {
                     tokens.push_back(currentToken);
-                    currentToken = Token(WORD);
+                    currentToken = Token(TokenType::WORD);
                 }
                 currentToken.value += current_char;
                 break;
             case '#':
                 if (!is_quotes) {
                     tokens.push_back(currentToken);
-                    currentToken = Token(COMMENT);
+                    currentToken = Token(TokenType::COMMENT);
                     while (i < len && input[i] != '\n') {
                         i++;
                     }
@@ -111,22 +112,22 @@ std::vector<Token> lexer(const std::string &input) {
                 break;
             case '(':
                 tokens.push_back(currentToken);
-                currentToken = Token(SUBOPEN, "(");
+                currentToken = Token(TokenType::SUBOPEN, "(");
                 break;
             case ')':
                 tokens.push_back(currentToken);
-                currentToken = Token(SUBCLOSE, ")");
+                currentToken = Token(TokenType::SUBCLOSE, ")");
                 break;
             case ' ':
                 tokens.push_back(currentToken);
-                currentToken = Token(EMPTY);
+                currentToken = Token(TokenType::EMPTY);
                 break;
             default:
-                if (currentToken.type == WORD || currentToken.type == VAR_DECL) {
+                if (currentToken.type == TokenType::WORD || currentToken.type == TokenType::VAR_DECL) {
                     currentToken.value += current_char;
                 } else {
                     tokens.push_back(currentToken);
-                    currentToken = Token(WORD);
+                    currentToken = Token(TokenType::WORD);
                     currentToken.value = current_char;
                 }
         }
@@ -135,15 +136,10 @@ std::vector<Token> lexer(const std::string &input) {
 
     tokens.push_back(currentToken);
     tokens.erase(tokens.begin());
-    if (!tokens.empty() && tokens.back().type == WORD && command_expected) {
-        tokens.back().type = COMMAND;
+    if (!tokens.empty() && tokens.back().type == TokenType::WORD && command_expected) {
+        tokens.back().type = TokenType::COMMAND;
     }
 
-//
-//    // print all tokens in form Type: <type> Value: <value>
-//    for (auto &token: tokens) {
-//        std::cout << "Type: " << token.type << " Value: " << token.value << std::endl;
-//    }
     return tokens;
 }
 

@@ -34,7 +34,7 @@ std::map<std::string, std::string> aliases;
  * @return True if command is built-in, false otherwise.
  */
 bool is_builtin(const std::string &cmd) {
-    return internal_commands.find(cmd) != internal_commands.end();
+    return internal_commands.contains(cmd);
 }
 
 /**
@@ -48,7 +48,7 @@ bool handle_help(int argc, char **argv, const builtin_doc &doc) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             std::cout << doc.args << " -- " << doc.brief << "\n\n";
-            if (not doc.doc.empty()) {
+            if (!doc.doc.empty()) {
                 std::cout << doc.doc << "\n\n";
             }
             return true;

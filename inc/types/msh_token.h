@@ -9,7 +9,7 @@
 #include <utility>
 #include <map>
 
-enum TokenType {
+enum class TokenType {
     EMPTY, // TODO! Properly handle <newline> <carriage return> etc.
     WORD,
     COMMAND,
@@ -42,7 +42,7 @@ struct Token {
     std::string value;
     char open_until;
 
-    explicit Token(TokenType t = EMPTY, char openUntil = '\0') : type(t), open_until(openUntil) {}
+    explicit Token(TokenType t = TokenType::EMPTY, char openUntil = '\0') : type(t), open_until(openUntil) {}
 
     Token(TokenType t, std::string value, char openUntil = '\0') : type(t), value(std::move(value)),
                                                                    open_until(openUntil) {}

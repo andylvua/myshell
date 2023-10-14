@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-static builtin_doc doc = {
+static const builtin_doc doc = {
         .args   = "mexit [code] [-h|--help]",
         .brief  = "Exit the shell",
         .doc    = "Exits the shell with a status of code given as an argument.\n"
@@ -32,10 +32,10 @@ int mexit(int argc, char **argv) {
 
     try {
         exit(std::stoi(argv[1]));
-    } catch (std::invalid_argument &e) {
+    } catch (std::invalid_argument &) {
         std::cout << "mexit: invalid argument: " << argv[1] << std::endl;
         return 1;
-    } catch (std::out_of_range &e) {
+    } catch (std::out_of_range &) {
         std::cout << "mexit: argument out of range: " << argv[1] << std::endl;
         return 1;
     }

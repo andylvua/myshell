@@ -40,11 +40,10 @@
 void set_variables(std::vector<Token> &tokens) {
     for (auto it = tokens.begin(); it != tokens.end(); ++it) {
         auto &token = *it;
-        if (token.type == VAR_DECL) {
-            auto next_token = (it + 1);
-            if (next_token != tokens.end() && token_flags[next_token->type] & IS_STRING) {
-                token.value += next_token->value;
-                tokens.erase(next_token);
+        if (token.type == TokenType::VAR_DECL) {
+            if (auto next = (it + 1); next != tokens.end() && token_flags[next->type] & IS_STRING) {
+                token.value += next->value;
+                tokens.erase(next);
             }
             auto pos = token.value.find('=');
             auto var_name = token.value.substr(0, pos);
@@ -53,9 +52,9 @@ void set_variables(std::vector<Token> &tokens) {
         }
     }
 
-    tokens.erase(std::remove_if(tokens.begin(), tokens.end(), [](const Token &token) {
-        return token.type == VAR_DECL;
-    }), tokens.end());
+    std::erase_if(tokens, [](const Token &token) {
+        return token.type == TokenType::VAR_DECL;
+    });
 
     // TODO! Handle illegal variable names. Only valid variable declarations should be processed
     //  and removed from the vector, otherwise they should be treated as WORD tokens and left unchanged
@@ -90,12 +89,12 @@ void expand_aliases(std::vector<Token> &tokens) {
         auto &curr_tokens = stack.top().second;
 
         for (; expansion_pointer < curr_tokens.size(); expansion_pointer++) {
-            auto &token = curr_tokens[expansion_pointer];
+            auto const &token = curr_tokens[expansion_pointer];
 
-            if (token.type != COMMAND) {
+            if (token.type != TokenType::COMMAND) {
                 continue;
             }
-            if (std::find(expanded.begin(), expanded.end(), token.value) != expanded.end()) {
+            if (std::ranges::find(expanded.begin(), expanded.end(), token.value) != expanded.end()) {
                 continue;
             }
 
@@ -154,34 +153,33 @@ void expand_vars(std::vector<Token> &tokens) {
         }
         std::string new_value;
         for (size_t i = 0; i < token.value.size(); i++) {
-            if (token.value[i] == '$') {
-                std::string var_name;
-                for (size_t j = i + 1; j < token.value.size(); j++) {
-                    if (stop_chars.find(token.value[j]) != std::string::npos) {
-                        break;
-                    }
-                    var_name += token.value[j];
-                }
-                if (var_name.empty()) {
-                    new_value += token.value[i];
-                    continue;
-                }
-                auto internal_var = get_variable(var_name);
-                if (internal_var != nullptr) {
-                    new_value += internal_var->value;
-                    i += var_name.size();
-                    continue;
-                }
-                auto var = getenv(var_name.data());
-                i += var_name.size();
-
-                if (var == nullptr) {
-                    continue;
-                }
-                new_value += var;
-            } else {
+            if (token.value[i] != '$') {
                 new_value += token.value[i];
+                continue;
             }
+            std::string var_name;
+            for (size_t j = i + 1; j < token.value.size(); j++) {
+                if (stop_chars.find(token.value[j]) != std::string::npos) {
+                    break;
+                }
+                var_name += token.value[j];
+            }
+            if (var_name.empty()) {
+                new_value += token.value[i];
+                continue;
+            }
+            if (auto internal_var = get_variable(var_name); internal_var != nullptr) {
+                new_value += internal_var->value;
+                i += var_name.size();
+                continue;
+            }
+            auto var = getenv(var_name.data());
+            i += var_name.size();
+
+            if (var == nullptr) {
+                continue;
+            }
+            new_value += var;
         }
         token.value = std::move(new_value);
     }
@@ -219,9 +217,9 @@ void expand_glob(std::vector<Token> &tokens) {
         }
         expanded_tokens.reserve(glob_result.gl_pathc * 2 - 1);
         for (size_t j = 0; j < glob_result.gl_pathc; j++) {
-            expanded_tokens.emplace_back(WORD, glob_result.gl_pathv[j]);
+            expanded_tokens.emplace_back(TokenType::WORD, glob_result.gl_pathv[j]);
             if (j != glob_result.gl_pathc - 1) {
-                expanded_tokens.emplace_back(EMPTY);
+                expanded_tokens.emplace_back(TokenType::EMPTY);
             }
         }
         auto insert_to = tokens.begin() + static_cast<int>(i);
@@ -242,10 +240,10 @@ void squash_tokens(std::vector<Token> &tokens) {
         return;
     }
     std::transform(tokens.begin(), tokens.end() - 1, tokens.begin() + 1, tokens.begin(),
-                   [](Token &a, Token &b) -> Token {
+                   [](Token &a, Token &b) {
                        if (token_flags[a.type] & WORD_LIKE && token_flags[b.type] & WORD_LIKE) {
                            a.value += b.value;
-                           b.type = EMPTY;
+                           b.type = TokenType::EMPTY;
                        }
                        return a;
                    });
@@ -260,8 +258,8 @@ void squash_tokens(std::vector<Token> &tokens) {
  * @see Token
  * @see token_flags
  */
-int check_syntax(std::vector<Token> &tokens) {
-    for (auto &token: tokens) {
+int check_syntax(const std::vector<Token> &tokens) {
+    for (auto const &token: tokens) {
         if (token_flags[token.type] & UNSUPPORTED) {
             print_error("Unsupported token: " + token.value);
             return 1;
@@ -290,9 +288,9 @@ int check_syntax(std::vector<Token> &tokens) {
  * @see Token
  * @see token_flags
  */
-std::vector<std::string> split_tokens(std::vector<Token> &tokens) {
+std::vector<std::string> split_tokens(const std::vector<Token> &tokens) {
     std::vector<std::string> args;
-    for (auto &token: tokens) {
+    for (auto const &token: tokens) {
         if (token_flags[token.type] & WORD_LIKE) {
             args.push_back(token.value);
         }

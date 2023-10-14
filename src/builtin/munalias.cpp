@@ -7,7 +7,7 @@
 
 #include "internal/msh_builtin.h"
 
-static builtin_doc doc = {
+static const builtin_doc doc = {
         .args   = "munalias <alias>... [-h|--help]",
         .brief  = "Remove aliases.",
         .doc    = "Removes aliases from the list of aliases.\n"
@@ -26,7 +26,7 @@ int munalias(int argc, char **argv) {
 
     for (int i = 1; i < argc; i++) {
         auto arg = std::string(argv[i]);
-        if (aliases.find(arg) != aliases.end()) {
+        if (aliases.contains(arg)) {
             aliases.erase(arg);
         } else {
             std::cout << "alias " << arg << " not found" << std::endl;

@@ -11,7 +11,7 @@
 
 int msh_errno = 0;
 
-static builtin_doc doc = {
+static const builtin_doc doc = {
         .args   = "merrno [-h|--help]",
         .brief  = "Print error code of the last command",
         .doc    = "Returns 1 if any arguments specified, 0 otherwise."

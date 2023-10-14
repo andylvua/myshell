@@ -7,9 +7,6 @@
 #ifndef MYSHELL_MSH_EXTERNAL_H
 #define MYSHELL_MSH_EXTERNAL_H
 
-#include <string>
-
 constexpr char MSH_EXTERNAL_BIN_PATH[] = "@EXTERNAL_BIN_PATH@";
-constexpr char EXTERNAL[] = "@EXTERNAL@";
 
 #endif //MYSHELL_MSH_EXTERNAL_H

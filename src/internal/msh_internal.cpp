@@ -63,7 +63,7 @@ variable *get_variable(const std::string &name) {
 void set_variable(const std::string &name, const std::string &value) {
     auto *var = get_variable(name);
     if (var == nullptr) {
-        variables.push_back({name, value});
+        variables.emplace_back(name, value);
     } else {
         var->value = value;
     }

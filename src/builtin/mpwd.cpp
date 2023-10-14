@@ -11,7 +11,7 @@
 #include <cstring>
 #include <unistd.h>
 
-static builtin_doc doc = {
+static const builtin_doc doc = {
         .args   = "mpwd [-h|--help]",
         .brief  = "Print the current working directory",
         .doc    = "Returns 1 if any arguments specified or getcwd() fails, 0 otherwise."

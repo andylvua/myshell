@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-static builtin_doc doc = {
+static const builtin_doc doc = {
         .args   = "mecho [args] [-h|--help]",
         .brief  = "Write arguments to the standard output",
         .doc    = "Arguments are separated by a single space character.\n"

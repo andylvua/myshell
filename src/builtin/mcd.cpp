@@ -10,7 +10,7 @@
 #include <iostream>
 #include <unistd.h>
 
-static builtin_doc doc = {
+static const builtin_doc doc = {
         .args   = "mcd <path> [-h|--help]",
         .brief  = "Change working directory",
         .doc    = "Returns 0 unless given wrong number of arguments or chdir() fails."

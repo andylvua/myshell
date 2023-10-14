@@ -43,6 +43,8 @@ int main(int argc, char *argv[]) {
 
         auto command = parse_input(input_buffer);
         command.execute();
+
+        free(input_buffer);
     }
 
     return 0;
