@@ -47,10 +47,7 @@ int fork_exec(int, char **argv) {
     int status = 0;
 
     if (pid == 0) {
-        if (is_msh_external(argv[0])) {
-            std::string path = std::string(MSH_EXTERNAL_BIN_PATH) + "/" + argv[0];
-            execve(path.c_str(), argv, environ);
-        } else if (std::string(argv[0]).find('/') != std::string::npos) {
+        if (std::string(argv[0]).find('/') != std::string::npos) {
             execve(argv[0], argv, environ);
             print_error(std::string(argv[0]) + ": " + strerror(errno));
             status = UNKNOWN_ERROR;

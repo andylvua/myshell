@@ -1,3 +1,6 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
 //
 // Created by andrew on 10/11/23.
 //
@@ -38,7 +41,7 @@ int malias(int argc, char **argv) {
         } else {
             auto name = arg.substr(0, pos);
             auto value = arg.substr(pos + 1);
-            aliases[name] = value;
+            aliases[name] = std::move(value);
         }
     }
 

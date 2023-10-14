@@ -1,9 +1,13 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
 //
 // Created by andrew on 10/9/23.
 //
 
 #include "internal/msh_internal.h"
 #include "types/msh_token.h"
+#include "msh_external.h"
 
 std::vector<variable> variables;
 
@@ -79,6 +83,9 @@ void msh_init() {
     set_variable("SHELL", SHELL);
     setenv("SHELL", SHELL, 1);
     set_variable("VERSION", VERSION);
+    auto new_path = std::string(MSH_EXTERNAL_BIN_PATH) + ":" + getenv("PATH");
+    setenv("PATH", new_path.c_str(), 1);
+    set_variable("PATH", new_path);
 
     // TODO! Read some .mshrc file and execute it to support setup scripts.
     //  Path should be provided by the build system or via config file by the user

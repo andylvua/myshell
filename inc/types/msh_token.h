@@ -10,7 +10,7 @@
 #include <map>
 
 enum TokenType {
-    EMPTY,
+    EMPTY, // TODO! Properly handle <newline> <carriage return> etc.
     WORD,
     COMMAND,
     AMP,
@@ -30,11 +30,11 @@ enum TokenType {
 
 extern std::map<TokenType, int> token_flags;
 
-constexpr int UNSUPPORTED = 1 << 0; // Unsupported token. Parser will throw an error if it encounters this
-constexpr int GLOB_NO_EXPAND = 1 << 1; // Tells the parser not to expand globs in this kind of token
-constexpr int VAR_NO_EXPAND = 1 << 2; // Tells the parser not to expand variables in this kind of token
-constexpr int WORD_LIKE = 1 << 3; // This token is a potential argument or command, not interpreted by the shell
-constexpr int IS_STRING = 1 << 4; // This token is a string literal
+constexpr int UNSUPPORTED       = 1 << 0; // Unsupported token. Parser will throw an error if it encounters this
+constexpr int GLOB_NO_EXPAND    = 1 << 1; // Tells the parser not to expand globs in this kind of token
+constexpr int VAR_NO_EXPAND     = 1 << 2; // Tells the parser not to expand variables in this kind of token
+constexpr int WORD_LIKE         = 1 << 3; // This token is a potential argument/command, not interpreted by the shell
+constexpr int IS_STRING         = 1 << 4; // This token is a string literal
 constexpr int COMMAND_SEPARATOR = 1 << 5; // This token separates simple commands. Used for parsing
 
 struct Token {

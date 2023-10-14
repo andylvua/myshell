@@ -12,6 +12,4 @@
 constexpr char MSH_EXTERNAL_BIN_PATH[] = "@EXTERNAL_BIN_PATH@";
 constexpr char EXTERNAL[] = "@EXTERNAL@";
 
-bool is_msh_external(const std::string &cmd);
-
 #endif //MYSHELL_MSH_EXTERNAL_H
