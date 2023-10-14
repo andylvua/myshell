@@ -62,16 +62,16 @@ list(FILTER SOURCES EXCLUDE REGEX "src/external/.*")
 file(GLOB_RECURSE HEADERS inc/*)
 
 # Add external programs
-include(src/external/ExternalPrograms.cmake)
+include(cmake/ExternalPrograms.cmake)
 message(STATUS "External programs: ${EXTERNAL}")
 message(STATUS "External programs binary path: ${EXTERNAL_BIN_PATH}")
 
 # Configure external programs header
-configure_file(src/external/msh_external.h.in ${CMAKE_BINARY_DIR}/generated/msh_external.h)
+configure_file(src/templates/msh_external.h.in ${CMAKE_BINARY_DIR}/generated/msh_external.h)
 # Configure history file path
 set(MSH_HISTORY_PATH "${CMAKE_BINARY_DIR}/.msh_history")
 message(STATUS "History file path: ${MSH_HISTORY_PATH}. Override if needed.")
-configure_file(src/internal/msh_history.h.in ${CMAKE_BINARY_DIR}/generated/msh_history.h)
+configure_file(src/templates/msh_history.h.in ${CMAKE_BINARY_DIR}/generated/msh_history.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 

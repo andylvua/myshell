@@ -80,7 +80,7 @@ void herror(error_code code, int use_errno, ...) {
 /**
  * Prints help message to stdout
  */
-void help() {
+void help(void) {
     printf("Usage: mycat [-h|--help] [-A] <file1> <file2> ... <fileN>\n");
 }
 
