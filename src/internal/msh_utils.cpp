@@ -59,6 +59,8 @@ void set_variables(std::vector<Token> &tokens) {
 
     // TODO! Handle illegal variable names. Only valid variable declarations should be processed
     //  and removed from the vector, otherwise they should be treated as WORD tokens and left unchanged
+    // MAYBE: Handle temporary variable definitions - use it only for a simple command following the
+    //  definition, then dispose of it
 }
 
 /**
@@ -236,13 +238,17 @@ void expand_glob(std::vector<Token> &tokens) {
  * @param tokens A vector of tokens to process.
  */
 void squash_tokens(std::vector<Token> &tokens) {
-    for (size_t i = 0; i < tokens.size() - 1; i++) {
-        if (token_flags[tokens[i].type] & WORD_LIKE && token_flags[tokens[i + 1].type] & WORD_LIKE) {
-            tokens[i].value += tokens[i + 1].value;
-            tokens.erase(tokens.begin() + static_cast<int>(i) + 1);
-            i--;
-        }
+    if (tokens.empty()) {
+        return;
     }
+    std::transform(tokens.begin(), tokens.end() - 1, tokens.begin() + 1, tokens.begin(),
+                   [](Token &a, Token &b) -> Token {
+                       if (token_flags[a.type] & WORD_LIKE && token_flags[b.type] & WORD_LIKE) {
+                           a.value += b.value;
+                           b.type = EMPTY;
+                       }
+                       return a;
+                   });
 }
 
 /**
