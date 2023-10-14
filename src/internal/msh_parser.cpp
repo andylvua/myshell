@@ -18,7 +18,7 @@
  * @param input The input string to be analyzed.
  * @return A vector of Token objects.
  */
-std::vector<Token> lexical_analysis(const std::string &input) {
+std::vector<Token> lexer(const std::string &input) {
     std::vector<Token> tokens;
     Token currentToken;
     bool is_quotes = false;
@@ -157,7 +157,7 @@ std::vector<Token> lexical_analysis(const std::string &input) {
  * @param input The input string to be parsed.
  * @return A @c command object containing the arguments and execution function.
  *
- * @see lexical_analysis()
+ * @see lexer()
  * @see process_tokens()
  * @see split_tokens()
  * @see msh_exec()
@@ -170,7 +170,7 @@ command parse_input(std::string input) {
         return {};
     }
 
-    std::vector<Token> tokens = lexical_analysis(input);
+    std::vector<Token> tokens = lexer(input);
 
     if (process_tokens(tokens) != 0) {
         return {};

@@ -72,7 +72,7 @@ int msh_exec_script(const char *path) {
  * @see msh_exec_script
  */
 int msh_execve(char **argv) {
-    int status;
+    int status = 0;
 
     if (std::string(argv[0]).find('/') != std::string::npos) {
         execve(argv[0], argv, environ);

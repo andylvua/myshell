@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-std::vector<Token> lexical_analysis(const std::string &input);
+std::vector<Token> lexer(const std::string &input);
 
 command parse_input(std::string input);
 

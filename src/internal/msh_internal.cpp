@@ -35,6 +35,10 @@ std::map<TokenType, int> token_flags = {
  * For COMMAND, GLOB_NO_EXPAND flag is set due to requirement "We ignore masks in the program name."
  * However, this behavior is unnatural.
  */
+/*MAYBE:
+ * Remove GLOB_NO_EXPAND for DQSTRING tokens to satisfy "Substitution of masks (wildcard) in double quotes."
+ * requirement. However, such behavior is unexpected too. Worth to discuss.
+ */
 
 
 /**

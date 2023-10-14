@@ -77,7 +77,7 @@ void set_variables(std::vector<Token> &tokens) {
  * @see Token
  * @see token_flags
  * @see aliases
- * @see lexical_analysis()
+ * @see lexer()
  */
 void expand_aliases(std::vector<Token> &tokens) {
     std::vector<std::string> expanded;
@@ -101,7 +101,7 @@ void expand_aliases(std::vector<Token> &tokens) {
 
             if (auto alias = aliases.find(token.value); alias != aliases.end()) {
                 expanded.push_back(token.value);
-                stack.emplace(expansion_pointer, lexical_analysis(alias->second));
+                stack.emplace(expansion_pointer, lexer(alias->second));
                 expansion_pointer = 0;
                 break;
             }
@@ -266,12 +266,16 @@ int check_syntax(std::vector<Token> &tokens) {
             print_error("Unsupported token: " + token.value);
             return 1;
         }
+        if (token.open_until) {
+            print_error("Unclosed delimiter: " + std::string{token.open_until});
+            return 1;
+        }
     }
 
     return 0;
 
-    // TODO! Currently only checks for unsupported tokens. Add proper syntax checking for
-    //  unclosed delimiters, unexpected tokens, etc. This will also enable multiline input handling.
+    // TODO! Currently only checks for unsupported tokens and unclosed delimiters.
+    //  Add proper syntax checking for unexpected tokens, etc. Add support for multiline input
 }
 
 
