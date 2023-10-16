@@ -52,10 +52,6 @@ void set_variables(std::vector<Token> &tokens) {
         }
     }
 
-    std::erase_if(tokens, [](const Token &token) {
-        return token.type == TokenType::VAR_DECL;
-    });
-
     // TODO! Handle illegal variable names. Only valid variable declarations should be processed
     //  and removed from the vector, otherwise they should be treated as WORD tokens and left unchanged
     // MAYBE: Handle temporary variable definitions - use it only for a simple command following the
