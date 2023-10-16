@@ -23,6 +23,11 @@ int msource(int argc, char **argv) {
         return 0;
     }
 
+    if (argc != 2) {
+        std::cout << "Usage: msource <file>" << std::endl;
+        return 1;
+    }
+
     if (std::ifstream script(argv[1]); !script.good()) {
         std::cout << "Couldn't open file " << argv[1] << std::endl;
         return 1;

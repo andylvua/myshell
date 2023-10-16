@@ -35,55 +35,64 @@
  */
 std::string expand_ps1(const std::string &ps1) {
     std::string result;
+
     for (size_t i = 0; i < ps1.size(); i++) {
         if (ps1[i] != '\\' || i + 1 >= ps1.size()) {
             result += ps1[i];
             continue;
         }
 
-        if (i + 1 < ps1.size()) {
-            switch (ps1[i + 1]) {
-                case 'd':
-                    namespace bg = boost::gregorian;
-                    result += bg::to_simple_string(bg::day_clock::local_day());
-                    break;
-                case 't':
-                    namespace pt = boost::posix_time;
-                    result += pt::to_simple_string(pt::second_clock::local_time()).substr(12);
-                    break;
-                case 'u':
-                    result += getenv("USER");
-                    break;
-                case 'h':
-                    result += boost::asio::ip::host_name();
-                    break;
-                case 'w':
-                    result += boost::filesystem::current_path().string();
-                    break;
-                case 'W':
-                    result += boost::filesystem::current_path().filename().string();
-                    break;
-                case 'n':
-                    result += '\n';
-                    break;
-                case 'r':
-                    result += '\r';
-                    break;
-                case 's':
-                    result += getenv("SHELL");
-                    break;
-                case 'v':
-                    result += getenv("VERSION");
-                    break;
-                case '$':
-                    result += '$';
-                    break;
-                default:
-                    result += ps1[i + 1];
-                    break;
-            }
-            i++;
+        auto next = ps1[i + 1];
+
+        // Check for \u, \s, \v escape sequences, as they require special handling
+        if (next == 'u') {
+            auto user = getenv("USER");
+            result += user != nullptr ? user : "";
+            goto next;
+        } else if (next == 's') {
+            auto shell = getenv("SHELL");
+            result += shell != nullptr ? shell : "";
+            goto next;
+        } else if (next == 'v') {
+            auto version = getenv("VERSION");
+            result += version != nullptr ? version : "";
+            goto next;
         }
+
+        switch (next) {
+            case 'd':
+                namespace bg = boost::gregorian;
+                result += bg::to_simple_string(bg::day_clock::local_day());
+                break;
+            case 't':
+                namespace pt = boost::posix_time;
+                result += pt::to_simple_string(pt::second_clock::local_time()).substr(12);
+                break;
+            case 'h':
+                result += boost::asio::ip::host_name();
+                break;
+            case 'w':
+                result += boost::filesystem::current_path().string();
+                break;
+            case 'W':
+                result += boost::filesystem::current_path().filename().string();
+                break;
+            case 'n':
+                result += '\n';
+                break;
+            case 'r':
+                result += '\r';
+                break;
+            case '$':
+                result += '$';
+                break;
+            default:
+                result += next;
+                break;
+        }
+
+        next:
+        i++;
     }
     return result;
 }

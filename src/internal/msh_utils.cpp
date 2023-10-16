@@ -291,7 +291,7 @@ int check_syntax(const std::vector<Token> &tokens) {
 std::vector<std::string> split_tokens(const std::vector<Token> &tokens) {
     std::vector<std::string> args;
     for (auto const &token: tokens) {
-        if (token_flags[token.type] & WORD_LIKE) {
+        if (token_flags[token.type] & WORD_LIKE && !token.value.empty()) {
             args.push_back(token.value);
         }
     }

@@ -90,7 +90,11 @@ void msh_init() {
     set_variable("SHELL", SHELL);
     setenv("SHELL", SHELL, 1);
     set_variable("VERSION", VERSION);
-    auto new_path = std::string(MSH_EXTERNAL_BIN_PATH) + ":" + getenv("PATH");
+
+    auto new_path = std::string(MSH_EXTERNAL_BIN_PATH) + ":";
+    if (auto path = getenv("PATH"); path != nullptr) {
+        new_path += path;
+    }
     setenv("PATH", new_path.c_str(), 1);
     set_variable("PATH", new_path);
 

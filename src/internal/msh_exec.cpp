@@ -83,7 +83,6 @@ int msh_execve(char **argv) {
             if (stat(argv[0], &st) == 0 && S_ISDIR(st.st_mode)) {
                 print_error(std::string(argv[0]) + ": Is a directory");
                 status = UNKNOWN_ERROR;
-                return status;
             } else {
                 print_error(std::string(argv[0]) + ": " + strerror(errno));
                 status = UNKNOWN_ERROR;

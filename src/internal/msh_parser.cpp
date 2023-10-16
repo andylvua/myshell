@@ -23,11 +23,14 @@ std::vector<Token> lexer(const std::string &input) {
     Token currentToken;
     bool is_quotes = false;
     bool command_expected = true;
+    char current_char;
+    char next_char;
     size_t i = 0;
     size_t len = input.length();
 
     while (i < len) {
-        char current_char = input[i];
+        current_char = input[i];
+        next_char = i + 1 < len ? input[i + 1] : '\0';
 
         if (!tokens.empty() && tokens.back().type == TokenType::WORD && command_expected) {
             tokens.back().type = TokenType::COMMAND;
@@ -40,10 +43,14 @@ std::vector<Token> lexer(const std::string &input) {
         }
 
         if (currentToken.open_until) {
-            if (current_char == currentToken.open_until)
+            if (current_char == currentToken.open_until) {
                 currentToken.open_until = '\0';
-            else
+            } else if (current_char == '\\' && next_char == '"' && currentToken.open_until == '\"') {
+                currentToken.value += next_char;
+                ++i;
+            } else {
                 currentToken.value += current_char;
+            }
             ++i;
             continue;
         }
@@ -54,8 +61,8 @@ std::vector<Token> lexer(const std::string &input) {
                     tokens.push_back(currentToken);
                     currentToken = Token(TokenType::WORD);
                 }
+                currentToken.value += next_char;
                 i++;
-                currentToken.value += input[i];
                 break;
             case '&':
                 if (currentToken.type == TokenType::AMP) currentToken.type = TokenType::AND;
@@ -177,6 +184,6 @@ command parse_input(std::string input) {
         return {};
     }
 
-    auto exec_func = is_builtin(args[0]) ? internal_commands[args[0]] : msh_exec;
+    auto exec_func = is_builtin(args[0]) ? internal_commands[args[0]] : &msh_exec;
     return {args, exec_func};
 }
