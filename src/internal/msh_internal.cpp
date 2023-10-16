@@ -8,6 +8,9 @@
 #include "internal/msh_internal.h"
 #include "types/msh_token.h"
 #include "msh_external.h"
+#include "msh_history.h"
+
+#include <readline/history.h>
 
 std::vector<variable> variables;
 
@@ -76,6 +79,9 @@ void set_variable(const std::string &name, const std::string &value) {
  * Sets the @c SHELL and @c VERSION to default values specified in msh_internal.h
  */
 void msh_init() {
+    atexit(msh_exit);
+    read_history(MSH_HISTORY_PATH);
+
     extern char** environ;
     for (char** env = environ; *env != nullptr; ++env) {
         std::string env_string(*env);
@@ -100,4 +106,19 @@ void msh_init() {
 
     // TODO! Read some .mshrc file and execute it to support setup scripts.
     //  Path should be provided by the build system or via config file by the user
+}
+
+/**
+ * @brief Perform necessary operations before exiting the shell.
+ *
+ * Saves the history to the file specified by MSH_HISTORY_PATH.
+ *
+ * @note MSH_HISTORY_PATH is set automatically by the build system.
+ *
+ * @see MSH_HISTORY_PATH
+ * @see write_history
+ * @see atexit
+ */
+void msh_exit() {
+    write_history(MSH_HISTORY_PATH);
 }

@@ -6,29 +6,15 @@
 #include "internal/msh_parser.h"
 #include "internal/msh_internal.h"
 
-#include "msh_history.h"
-
 #include <readline/readline.h>
 #include <readline/history.h>
 
-/**
- * @brief Write history to persistent file on exit.
- *
- * @note MSH_HISTORY_PATH is set automatically by the build system.
- *
- * @see MSH_HISTORY_PATH
- * @see write_history
- * @see atexit
- */
-void on_exit() {
-    write_history(MSH_HISTORY_PATH);
-}
 
 // MAYBE: Add signal handling
 //  Possible behavior: https://www.gnu.org/software/bash/manual/html_node/Signals.html
+// MAYBE: Move `myshell` to a dedicated class. It possibly can reduce the complexity of the project.
 int main(int argc, char *argv[]) {
     msh_init();
-    atexit(on_exit);
 
     if (argc > 1) {
         msource(argc, argv);
@@ -36,8 +22,6 @@ int main(int argc, char *argv[]) {
     }
 
     char *input_buffer;
-    read_history(MSH_HISTORY_PATH);
-
     while ((input_buffer = readline(generate_prompt().data())) != nullptr) {
         add_history(input_buffer);
 

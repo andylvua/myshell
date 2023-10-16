@@ -19,4 +19,6 @@ void set_variable(const std::string &name, const std::string &value);
 
 void msh_init();
 
+void msh_exit();
+
 #endif //MYSHELL_MSH_INTERNAL_H
