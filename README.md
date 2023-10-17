@@ -1,4 +1,4 @@
-# Lab work 4: 'myshell` - a custom shell implementation
+# Lab work 4: `myshell` - a custom shell implementation
 Authors (team): 
 - [Yurii Kharabara](https://github.com/YuriiKharabara)
 - [Andrii Yaroshevych](https://github.com/andylvua)
@@ -158,7 +158,7 @@ This command is a synonym for the `.` command and operates identically to it.
 - **Default Prompt**:
 The default prompt is changed from `\w \$ ` specified in the main task to `\d [\u@\h \W] \$ `. This is done to demonstrate the `PS1` environment variable expansion.
 
-## Documentation
+### Documentation
 The whole project is documented. Feel free to read it if something is unclear.
 
 ## Additional Tasks
