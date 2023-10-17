@@ -10,7 +10,8 @@
 #include <iostream>
 
 static const builtin_doc doc = {
-        .args   = "mexit [code] [-h|--help]",
+        .name   = "mexit",
+        .args   = "[code] [-h|--help]",
         .brief  = "Exit the shell",
         .doc    = "Exits the shell with a status of code given as an argument.\n"
                   "If no argument is given exits with a status of 0.\n"
@@ -18,25 +19,32 @@ static const builtin_doc doc = {
 };
 
 int mexit(int argc, char **argv) {
-    if (handle_help(argc, argv, doc)) {
-        return 0;
+    try {
+        if (handle_help(argc, argv, doc)) {
+            return 0;
+        }
+    } catch (std::exception &e) {
+        print_error(doc.name + ": " + e.what());
+        std::cerr << "Usage: " << doc.name << " " << doc.args << std::endl;
+        return 1;
     }
 
     if (argc == 1) {
         exit(0);
     }
     if (argc > 2) {
-        std::cout << "Usage: mexit <code>" << std::endl;
+        std::cerr << "mexit: wrong number of arguments" << std::endl;
+        std::cerr << doc.get_usage() << std::endl;
         return 1;
     }
 
     try {
         exit(std::stoi(argv[1]));
     } catch (std::invalid_argument &) {
-        std::cout << "mexit: invalid argument: " << argv[1] << std::endl;
-        return 1;
+        std::cerr << "mexit: numeric argument expected: " << argv[1] << std::endl;
+        exit(2);
     } catch (std::out_of_range &) {
-        std::cout << "mexit: argument out of range: " << argv[1] << std::endl;
-        return 1;
+        std::cerr << "mexit: argument out of range: " << argv[1] << std::endl;
+        exit(2);
     }
 }

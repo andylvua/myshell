@@ -80,7 +80,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE inc)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated)
 
 #! Add external packages
-find_package(Boost 1.71.0 REQUIRED COMPONENTS filesystem system)
+find_package(Boost 1.71.0 REQUIRED COMPONENTS filesystem system program_options)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 

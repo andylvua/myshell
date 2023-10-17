@@ -7,6 +7,8 @@
 
 #include "internal/msh_builtin.h"
 
+#include <boost/program_options.hpp>
+
 /**
  * @brief Map of internal commands and their corresponding functions.
  */
@@ -39,20 +41,37 @@ bool is_builtin(const std::string &cmd) {
 
 /**
  * @brief Check if help flag is present in arguments and print help message if it is.
+ * If unknown flags are present, throws an exception intended to be caught by the
+ * internal command handler.
  * @param argc Number of arguments.
  * @param argv Array of arguments.
  * @param doc Documentation of the command.
  * @return True if help flag is present, false otherwise.
+ * @throws boost::program_options::error if arguments are invalid.
  */
 bool handle_help(int argc, char **argv, const builtin_doc &doc) {
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-            std::cout << doc.args << " -- " << doc.brief << "\n\n";
+    using namespace boost;
+    namespace po = program_options;
+
+    po::options_description desc("Options");
+    desc.add_options()
+            ("help,h", "Print help message");
+
+    po::variables_map vm;
+
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+        if (vm.count("help")) {
+            std::cout << doc.name << " " << doc.args << " -- " << doc.brief << "\n\n";
             if (!doc.doc.empty()) {
                 std::cout << doc.doc << "\n\n";
             }
             return true;
+        } else {
+            return false;
         }
+    } catch (po::error &e) {
+        throw;
     }
-    return false;
 }

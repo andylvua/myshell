@@ -12,18 +12,26 @@
 int msh_errno = 0;
 
 static const builtin_doc doc = {
-        .args   = "merrno [-h|--help]",
+        .name   = "merrno",
+        .args   = "[-h|--help]",
         .brief  = "Print error code of the last command",
         .doc    = "Returns 1 if any arguments specified, 0 otherwise."
 };
 
 int merrno(int argc, char **argv) {
-    if (handle_help(argc, argv, doc)) {
-        return 0;
+    try {
+        if (handle_help(argc, argv, doc)) {
+            return 0;
+        }
+    } catch (std::exception &e) {
+        print_error(doc.name + ": " + e.what());
+        std::cerr << "Usage: " << doc.name << " " << doc.args << std::endl;
+        return 1;
     }
 
     if (argc > 1) {
-        std::cout << "Usage: merrno" << std::endl;
+        std::cerr << "merrno: wrong number of arguments" << std::endl;
+        std::cerr << doc.get_usage() << std::endl;
         return 1;
     }
     std::cout << msh_errno << std::endl;

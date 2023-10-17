@@ -7,8 +7,11 @@
 
 #include "internal/msh_builtin.h"
 
+#include <boost/program_options.hpp>
+
 static const builtin_doc doc = {
-        .args   = "malias [name[=value] ...] [-h|--help]",
+        .name   = "malias",
+        .args   = "[name[=value] ...] [-h|--help]",
         .brief  = "Create or print aliases",
         .doc    = "Without arguments, prints all aliases.\n\n"
                   "If arguments are given, creates an alias for each argument of the form NAME=VALUE\n"
@@ -17,12 +20,18 @@ static const builtin_doc doc = {
 };
 
 int malias(int argc, char **argv) {
-    if (handle_help(argc, argv, doc)) {
-        return 0;
+    try {
+        if (handle_help(argc, argv, doc)) {
+            return 0;
+        }
+    } catch (std::exception &e) {
+        print_error(doc.name + ": " + e.what());
+        std::cerr << "Usage: " << doc.name << " " << doc.args << std::endl;
+        return 1;
     }
 
     if (argc == 1) {
-        for (auto const& [name, value] : aliases) {
+        for (auto const &[name, value]: aliases) {
             std::cout << "alias " << name << "=" << "'" << value << "'" << std::endl;
         }
         return 0;
@@ -35,7 +44,7 @@ int malias(int argc, char **argv) {
             if (aliases.contains(arg)) {
                 std::cout << "alias " << arg << "=" << "'" << aliases[arg] << "'" << std::endl;
             } else {
-                std::cout << "alias " << arg << " not found" << std::endl;
+                std::cerr << "alias " << arg << " not found" << std::endl;
                 return 1;
             }
         } else {

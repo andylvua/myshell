@@ -12,24 +12,32 @@
 #include <fstream>
 
 static const builtin_doc doc = {
-        .args   = "msource (or .) <file> [-h|--help]",
+        .name   = "msource (or .)",
+        .args   = "<file> [-h|--help]",
         .brief  = "Execute commands from a given file in the current shell.",
         .doc    = "Reads commands from a given file line by line and executes them in the current shell.\n"
                   "Returns 0 unless file can't be opened."
 };
 
 int msource(int argc, char **argv) {
-    if (handle_help(argc, argv, doc)) {
-        return 0;
+    try {
+        if (handle_help(argc, argv, doc)) {
+            return 0;
+        }
+    } catch (std::exception &e) {
+        print_error(doc.name + ": " + e.what());
+        std::cerr << "Usage: " << doc.name << " " << doc.args << std::endl;
+        return 1;
     }
 
     if (argc != 2) {
-        std::cout << "Usage: msource <file>" << std::endl;
+        std::cerr << "msource: wrong number of arguments" << std::endl;
+        std::cerr << doc.get_usage() << std::endl;
         return 1;
     }
 
     if (std::ifstream script(argv[1]); !script.good()) {
-        std::cout << "Couldn't open file " << argv[1] << std::endl;
+        std::cerr << "Couldn't open file " << argv[1] << std::endl;
         return 1;
     }
 

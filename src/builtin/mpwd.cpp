@@ -12,18 +12,26 @@
 #include <unistd.h>
 
 static const builtin_doc doc = {
-        .args   = "mpwd [-h|--help]",
+        .name   = "mpwd",
+        .args   = "[-h|--help]",
         .brief  = "Print the current working directory",
         .doc    = "Returns 1 if any arguments specified or getcwd() fails, 0 otherwise."
 };
 
 int mpwd(int argc, char **argv) {
-    if (handle_help(argc, argv, doc)) {
-        return 0;
+    try {
+        if (handle_help(argc, argv, doc)) {
+            return 0;
+        }
+    } catch (std::exception &e) {
+        print_error(doc.name + ": " + e.what());
+        std::cerr << "Usage: " << doc.name << " " << doc.args << std::endl;
+        return 1;
     }
 
     if (argc > 1) {
-        std::cout << "Usage: mpwd" << std::endl;
+        std::cerr << "mpwd: wrong number of arguments" << std::endl;
+        std::cerr << doc.get_usage() << std::endl;
         return 1;
     }
     char *cwd = getcwd(nullptr, 0);
