@@ -18,7 +18,11 @@ const std::map<TokenType, int> token_flags = {
         {TokenType::EMPTY,     0},
         {TokenType::WORD,      WORD_LIKE | GLOB_EXPAND | VAR_EXPAND},
         {TokenType::COMMAND,   WORD_LIKE | VAR_EXPAND},
+#ifdef ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION
+        {TokenType::DQSTRING,  WORD_LIKE | IS_STRING | VAR_EXPAND | GLOB_EXPAND},
+#else
         {TokenType::DQSTRING,  WORD_LIKE | IS_STRING | VAR_EXPAND},
+#endif
         {TokenType::SQSTRING,  WORD_LIKE | IS_STRING},
         {TokenType::VAR_DECL,  0},
         {TokenType::SUBOPEN,   UNSUPPORTED | COMMAND_SEPARATOR},
@@ -35,11 +39,6 @@ const std::map<TokenType, int> token_flags = {
  * For COMMAND, GLOB_NO_EXPAND flag is set due to requirement "We ignore masks in the program name."
  * However, this behavior is unnatural.
  */
-/*MAYBE:
- * Remove GLOB_NO_EXPAND for DQSTRING tokens to satisfy "Substitution of masks (wildcard) in double quotes."
- * requirement. However, such behavior is unexpected too. Worth to discuss.
- */
-
 
 /**
  * @brief Get a pointer to an internal variable with the given name.

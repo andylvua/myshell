@@ -73,6 +73,15 @@ set(MSH_HISTORY_PATH "${CMAKE_BINARY_DIR}/msh/.msh_history")
 message(STATUS "History file path: ${MSH_HISTORY_PATH}. Override if needed.")
 configure_file(src/templates/msh_history.h.in ${CMAKE_BINARY_DIR}/generated/msh_history.h)
 
+# Specify the wildcard expansion behavior for double-quoted strings
+# if ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION is ON, then double-quoted strings are expanded
+# if ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION is OFF, then double-quoted strings are not expanded
+set(ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION ON)
+
+if (ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION)
+	add_compile_definitions(ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION)
+endif ()
+
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 #! Put path to your project headers
