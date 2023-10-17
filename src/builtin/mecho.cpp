@@ -1,3 +1,6 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
 //
 // Created by andrew on 10/8/23.
 //
@@ -6,12 +9,21 @@
 
 #include <iostream>
 
-static char doc[] = "mecho -- Write arguments to the standard output.";
-static char args_doc[] = "<string>...";
+static const builtin_doc doc = {
+        .name   = "mecho",
+        .args   = "[args] [-h|--help]",
+        .brief  = "Write arguments to the standard output",
+        .doc    = "Arguments are separated by a single space character.\n"
+                  "If no arguments are given, a blank line is output."
+};
 
 int mecho(int argc, char **argv) {
-    if (handle_help(argc, argv, doc, args_doc)) {
-        return 0;
+    try {
+        if (handle_help(argc, argv, doc)) {
+            return 0;
+        }
+    } catch (std::exception &e) {
+        // For mecho we don't care about invalid arguments. Treat them as arguments.
     }
 
     for (int i = 1; i < argc; ++i) {

@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.15)
 #! CHANGE YOUR PROJECT NAME
 #  It is used as your project's main executable name. 
 set(PROJECT_NAME myshell)
-project(${PROJECT_NAME} C CXX) # project(${PROJECT_NAME} C CXX ASM)
+project(${PROJECT_NAME} CXX) # project(${PROJECT_NAME} C CXX ASM)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -17,7 +17,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 #! It is a good practice to set "WARNINGS_AS_ERRORS" ON,
 #  but sometimes it creates too much trouble, so default is OFF.
-set(WARNINGS_AS_ERRORS OFF)
+set(WARNINGS_AS_ERRORS ON)
 
 #! Always use PVS Studio while developing.
 set(ENABLE_PVS_STUDIO OFF)
@@ -62,29 +62,34 @@ list(FILTER SOURCES EXCLUDE REGEX "src/external/.*")
 file(GLOB_RECURSE HEADERS inc/*)
 
 # Add external programs
-include(src/external/ExternalPrograms.cmake)
+include(cmake/ExternalPrograms.cmake)
 message(STATUS "External programs: ${EXTERNAL}")
 message(STATUS "External programs binary path: ${EXTERNAL_BIN_PATH}")
 
 # Configure external programs header
-configure_file(src/external/msh_external.h.in ${CMAKE_BINARY_DIR}/generated/msh_external.h)
+configure_file(src/templates/msh_external.h.in ${CMAKE_BINARY_DIR}/generated/msh_external.h)
 # Configure history file path
-set(MSH_HISTORY_PATH "${CMAKE_BINARY_DIR}/.msh_history")
+set(MSH_HISTORY_PATH "${CMAKE_BINARY_DIR}/msh/.msh_history")
 message(STATUS "History file path: ${MSH_HISTORY_PATH}. Override if needed.")
-configure_file(src/internal/msh_history.h.in ${CMAKE_BINARY_DIR}/generated/msh_history.h)
+configure_file(src/templates/msh_history.h.in ${CMAKE_BINARY_DIR}/generated/msh_history.h)
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS}
-		src/external/msh_external.h.in
-		src/external/msh_external.cpp)
+# Specify the wildcard expansion behavior for double-quoted strings
+# if ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION is ON, then double-quoted strings are expanded
+# if ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION is OFF, then double-quoted strings are not expanded
+set(ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION OFF)
+
+if (ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION)
+	add_compile_definitions(ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION)
+endif ()
+
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 #! Put path to your project headers
-target_include_directories(${PROJECT_NAME} PRIVATE options_parser)
 target_include_directories(${PROJECT_NAME} PRIVATE inc)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/generated)
 
 #! Add external packages
-# options_parser requires boost::program_options library
-find_package(Boost 1.71.0 REQUIRED COMPONENTS program_options filesystem system)
+find_package(Boost 1.71.0 REQUIRED COMPONENTS filesystem system program_options)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 

@@ -3,17 +3,18 @@
 
 #include "internal/msh_builtin.h"
 #include "internal/msh_utils.h"
-#include "msh_history.h"
+#include "internal/msh_parser.h"
+#include "internal/msh_internal.h"
 
 #include <readline/readline.h>
 #include <readline/history.h>
 
-void on_exit() {
-    write_history(MSH_HISTORY_PATH);
-}
 
+// MAYBE: Add signal handling
+//  Possible behavior: https://www.gnu.org/software/bash/manual/html_node/Signals.html
+// MAYBE: Move `myshell` to a dedicated class. It possibly can reduce the complexity of the project.
 int main(int argc, char *argv[]) {
-    atexit(on_exit);
+    msh_init();
 
     if (argc > 1) {
         msource(argc, argv);
@@ -21,13 +22,13 @@ int main(int argc, char *argv[]) {
     }
 
     char *input_buffer;
-    read_history(MSH_HISTORY_PATH);
-
-    while ((input_buffer = readline(prompt().data())) != nullptr) {
+    while ((input_buffer = readline(generate_prompt().data())) != nullptr) {
         add_history(input_buffer);
 
         auto command = parse_input(input_buffer);
         command.execute();
+
+        free(input_buffer);
     }
 
     return 0;
