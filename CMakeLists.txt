@@ -76,7 +76,7 @@ configure_file(src/templates/msh_history.h.in ${CMAKE_BINARY_DIR}/generated/msh_
 # Specify the wildcard expansion behavior for double-quoted strings
 # if ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION is ON, then double-quoted strings are expanded
 # if ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION is OFF, then double-quoted strings are not expanded
-set(ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION ON)
+set(ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION OFF)
 
 if (ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION)
 	add_compile_definitions(ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION)
