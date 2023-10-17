@@ -16,7 +16,7 @@ allowing users to execute commands and manage files and directories.
 The project is build using C++20 standard. 
 
 - [CMake](https://cmake.org/) (version 3.15 or higher)
-- [GCC](https://gcc.gnu.org/) (version 10.5.0 or higher)
+- [GCC](https://gcc.gnu.org/) (version 10.5.0 or higher) or [Clang](https://clang.llvm.org/) (version 14.0.6 or higher)
 
 Besides, it heavily relies on the following libraries:
 - [Boost](https://www.boost.org/) (version 1.71.0 or higher)
@@ -98,32 +98,34 @@ When `myshell` starts, it initializes essential configurations:
 - Sets up other necessary configurations.
 
 **Main Loop**
+
 `myshell` enters its main loop, continuously awaiting user input. 
 Within this loop, the following operations are performed:
 
-- Read User Input
+- Read User Input <br><br>
 The shell waits for the user to enter a command.
-
-- Tokenize
+<br><br>
+- Tokenize <br><br>
 The input is tokenized using a lexer/tokenizer, breaking the user input into individual tokens representing commands, arguments, or special symbols.
-
-- Tokens Processing
+<br><br>
+- Tokens Processing <br><br>
 This step involves several sub-steps:
-    - _Alias Expansion_: All aliases are expanded into their corresponding commands.
+    - _Alias Expansion_: All aliases are expanded into their corresponding values.
     - _Syntax Check_: The syntax of the command is checked to ensure that it is valid.
     - _Variable Expansion_: All variables are expanded into their corresponding values.
     - _Setting Internal Variables_: The shell processes variable declarations and sets the corresponding internal variables.
     - _Wildcard Expansion_: Wildcard characters are expanded into their corresponding file names.
     - _Tokens Merging_: The shell merges adjacent tokens into a single token if necessary.
-
-**Arguments Processing**
+<br><br>
+- Argument Processing <br><br>
 The shell splits the processed tokens into command arguments.
+<br><br>
 
-**Command Execution**
+- Command Execution <br><br>
 Depending on the command's nature:
-- _Internal/Built-in Commands:_ Handled directly by the shell (e.g., changing directories or setting environment variables).
-- _External Commands:_ `myshell` spawns a child process using the `fork` system call and then executes the command in the child process via `execve`/`execvpe`.
-- _Scripts:_ `myshell` can also execute script files, treating them as sequences of commands.
+  - _Internal/Built-in Commands:_ Handled directly by the shell (e.g., changing directories or setting environment variables).
+  - _External Commands:_ `myshell` spawns a child process using the `fork` system call and then executes the command in the child process via `execve`/`execvpe`.
+  - _Scripts:_ `myshell` can also execute script files, treating them as sequences of commands.
 
 > **Note**
 > 
@@ -131,11 +133,13 @@ Depending on the command's nature:
 > The shell terminates after executing the script file.
 
 **Cleanup**
+
 When the user exits the shell, it saves the command history to the history file and performs other necessary cleanup operations.
 
 ### Notes on Implementation
 
 - **Wildcard Expansion**:
+
 Suggestion
 ```text
 The mask can contain an absolute or relative path, 
@@ -147,16 +151,21 @@ Maybe with a warning message from myshell.
 is ignored. Wildcard expansion is performed on the **entire** path, not just the last element.
 
 - **Variable Expansion**:
+
 If a variable is not defined, it is treated as an empty string. This behavior is consistent with other shells, however, unspecified in the task.
 
-- **`msource` builtin command**:
+- **`msource` Builtin Command**:
+
 This command is a synonym for the `.` command and operates identically to it.
 
 - **Tilde Expansion**:
+
 `myshell` supports tilde expansion. It expands `~` to the user's home directory.
 
 - **Default Prompt**:
-The default prompt is changed from `\w \$ ` specified in the main task to `\d [\u@\h \W] \$ `. This is done to demonstrate the `PS1` environment variable expansion.
+
+The default prompt is changed from `\w \$ ` specified in the main task to `\d [\u@\h \W] \$ `. 
+This is done to demonstrate the `PS1` environment variable expansion.
 
 ### Documentation
 The whole project is documented. Feel free to read it if something is unclear.
@@ -201,6 +210,7 @@ Due to this fact, `myshell` won't be able to execute commands with these tokens.
 8. **Customizable Prompt**: The shell prompt can be customized based on the `PS1` environment variable. This provides users with the flexibility to include information such as the username or the current time in the prompt.
 
 Currently, the following variables are supported:
+- `\d` - The current date in YYYY-MM-DD format.
 - `\t` - The current time in HH:MM:SS format.
 - `\u` - The current user.
 - `\h` - The current host.
@@ -230,5 +240,4 @@ For more information, please use the `--help` flag.
 
 > **Note**
 > 
-> `myshell` incorporates a robust alias expansion mechanism that prevents infinite alias expansion loops.
-> Also, aliases can appear in aliases itself.
+> Aliases can appear in alias itself. `myshell` incorporates a robust alias expansion mechanism that prevents infinite alias expansion loops.
