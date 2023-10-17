@@ -36,7 +36,7 @@ std::vector<Token> lexer(const std::string &input) {
             tokens.back().type = TokenType::COMMAND;
             command_expected = false;
         }
-        command_expected |= token_flags[currentToken.type] & COMMAND_SEPARATOR;
+        command_expected |= currentToken.get_flag(COMMAND_SEPARATOR);
 
         if (current_char == '\'' || current_char == '\"') {
             is_quotes = !is_quotes;
@@ -111,7 +111,6 @@ std::vector<Token> lexer(const std::string &input) {
             case '#':
                 if (!is_quotes) {
                     tokens.push_back(currentToken);
-                    currentToken = Token(TokenType::COMMENT);
                     while (i < len && input[i] != '\n') {
                         i++;
                     }
@@ -184,6 +183,6 @@ command parse_input(std::string input) {
         return {};
     }
 
-    auto exec_func = is_builtin(args[0]) ? internal_commands[args[0]] : &msh_exec;
+    auto exec_func = is_builtin(args[0]) ? internal_commands.at(args[0]) : &msh_exec;
     return {args, exec_func};
 }

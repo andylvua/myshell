@@ -10,7 +10,7 @@
 /**
  * @brief Map of internal commands and their corresponding functions.
  */
-std::map<std::string, command::func_t> internal_commands = {
+const std::map<std::string, command::func_t> internal_commands = {
         {"merrno",   merrno},
         {"mpwd",     mpwd},
         {"mcd",      mcd},

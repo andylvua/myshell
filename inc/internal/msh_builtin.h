@@ -13,7 +13,7 @@
 #include <cstring>
 #include <iostream>
 
-extern std::map<std::string, command::func_t> internal_commands;
+extern const std::map<std::string, command::func_t> internal_commands;
 
 extern std::map<std::string, std::string> aliases;
 

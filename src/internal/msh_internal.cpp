@@ -14,18 +14,15 @@
 
 std::vector<variable> variables;
 
-// MAYBE: Store token flags in the token itself. Could possibly be more clear and less error-prone
-//  In that case, properly handle TokenType in constructors and/or on type change operations
-
-std::map<TokenType, int> token_flags = {
-        {TokenType::WORD,      WORD_LIKE},
-        {TokenType::COMMAND,   WORD_LIKE | GLOB_NO_EXPAND},
-        {TokenType::DQSTRING,  GLOB_NO_EXPAND | WORD_LIKE | IS_STRING},
-        {TokenType::SQSTRING,  VAR_NO_EXPAND | GLOB_NO_EXPAND | WORD_LIKE | IS_STRING},
+const std::map<TokenType, int> token_flags = {
+        {TokenType::EMPTY,     0},
+        {TokenType::WORD,      WORD_LIKE | GLOB_EXPAND | VAR_EXPAND},
+        {TokenType::COMMAND,   WORD_LIKE | VAR_EXPAND},
+        {TokenType::DQSTRING,  WORD_LIKE | IS_STRING | VAR_EXPAND},
+        {TokenType::SQSTRING,  WORD_LIKE | IS_STRING},
         {TokenType::VAR_DECL,  0},
         {TokenType::SUBOPEN,   UNSUPPORTED | COMMAND_SEPARATOR},
         {TokenType::SUBCLOSE,  UNSUPPORTED},
-        {TokenType::COMMENT,   0},
         {TokenType::AMP,       UNSUPPORTED | COMMAND_SEPARATOR},
         {TokenType::AND,       UNSUPPORTED},
         {TokenType::PIPE,      UNSUPPORTED | COMMAND_SEPARATOR},

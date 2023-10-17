@@ -41,7 +41,7 @@ void set_variables(std::vector<Token> &tokens) {
     for (auto it = tokens.begin(); it != tokens.end(); ++it) {
         auto &token = *it;
         if (token.type == TokenType::VAR_DECL) {
-            if (auto next = (it + 1); next != tokens.end() && token_flags[next->type] & IS_STRING) {
+            if (auto next = (it + 1); next != tokens.end() && next->get_flag(IS_STRING)) {
                 token.value += next->value;
                 tokens.erase(next);
             }
@@ -144,7 +144,7 @@ void expand_vars(std::vector<Token> &tokens) {
     //  metacharacters and syntax used by the shell
 
     for (auto &token: tokens) {
-        if (token_flags[token.type] & VAR_NO_EXPAND) {
+        if (!token.get_flag(VAR_EXPAND)) {
             continue;
         }
         std::string new_value;
@@ -202,7 +202,7 @@ void expand_glob(std::vector<Token> &tokens) {
     std::vector<Token> expanded_tokens;
 
     for (size_t i = 0; i < tokens.size(); i++) {
-        if (token_flags[tokens[i].type] & GLOB_NO_EXPAND) {
+        if (!tokens[i].get_flag(GLOB_EXPAND)) {
             continue;
         }
         glob_t glob_result;
@@ -237,7 +237,7 @@ void squash_tokens(std::vector<Token> &tokens) {
     }
     std::transform(tokens.begin(), tokens.end() - 1, tokens.begin() + 1, tokens.begin(),
                    [](Token &a, Token &b) {
-                       if (token_flags[a.type] & WORD_LIKE && token_flags[b.type] & WORD_LIKE) {
+                       if (a.get_flag(WORD_LIKE) && b.get_flag(WORD_LIKE)) {
                            a.value += b.value;
                            b.type = TokenType::EMPTY;
                        }
@@ -256,7 +256,7 @@ void squash_tokens(std::vector<Token> &tokens) {
  */
 int check_syntax(const std::vector<Token> &tokens) {
     for (auto const &token: tokens) {
-        if (token_flags[token.type] & UNSUPPORTED) {
+        if (token.get_flag(UNSUPPORTED)) {
             print_error("Unsupported token: " + token.value);
             return 1;
         }
@@ -287,7 +287,7 @@ int check_syntax(const std::vector<Token> &tokens) {
 std::vector<std::string> split_tokens(const std::vector<Token> &tokens) {
     std::vector<std::string> args;
     for (auto const &token: tokens) {
-        if (token_flags[token.type] & WORD_LIKE && !token.value.empty()) {
+        if (token.get_flag(WORD_LIKE) && !token.value.empty()) {
             args.push_back(token.value);
         }
     }
