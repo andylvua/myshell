@@ -6,6 +6,7 @@
 //
 
 #include "internal/msh_prompt.h"
+#include "internal/msh_error.h"
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -106,9 +107,34 @@ std::string expand_ps1(const std::string &ps1) {
  * @return The generated prompt string.
  */
 std::string generate_prompt() {
-   auto ps1 = getenv("PS1");
-    if (ps1 == nullptr) {
-        return expand_ps1(DEFAULT_PS1);
+    static auto constexpr BACKGROUND = "\033[48;5;236m";
+    static auto constexpr FOREGROUND = "\033[38;5;236m";
+    static auto constexpr RESET = "\033[0m";
+    static auto constexpr MARKER_SUCCESS = "✔";
+    static auto constexpr MARKER_FAILURE = "✘";
+
+    struct winsize w{};
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+    std::string prompt;
+    if (auto ps1 = getenv("PS1"); ps1 == nullptr) {
+        prompt = expand_ps1(DEFAULT_PS1);
+    } else {
+        prompt = expand_ps1(ps1);
     }
-    return expand_ps1(ps1);
+
+    auto marker_color = msh_errno == 0 ? "\033[32m" : "\033[31m";
+    auto exit_marker = FOREGROUND + std::string("\uE0B2") + BACKGROUND + " " + marker_color;
+    auto indicator = msh_errno == 0 ? MARKER_SUCCESS : MARKER_FAILURE;
+
+    exit_marker += (msh_errno == 0 ? "" : std::to_string(msh_errno) + " ") + indicator + " " + RESET;
+    auto indicator_pos = std::to_string(w.ws_col - exit_marker.size() + 36);
+
+    std::string escape_seq;
+    escape_seq += "\033[" + indicator_pos + "G";
+    escape_seq += exit_marker;
+    escape_seq += "\033[0G";
+
+    escape_seq += BACKGROUND + prompt + BACKGROUND + " " + RESET + FOREGROUND + "\uE0B0" + RESET + " ";
+    return escape_seq;
 }

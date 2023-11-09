@@ -24,8 +24,8 @@ int msource(int argc, char **argv) {
         if (handle_help(argc, argv, doc)) {
             return 0;
         }
-    } catch (std::exception &e) {
-        print_error(doc.name + ": " + e.what());
+    } catch (const std::exception &e) {
+        msh_error(doc.name + ": " + e.what());
         std::cerr << "Usage: " << doc.name << " " << doc.args << std::endl;
         return 1;
     }

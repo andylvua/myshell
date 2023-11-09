@@ -21,7 +21,7 @@
 // \$ - a literal '$' prompt
 /* END OF SUPPORTED VARIABLES */
 
-constexpr auto DEFAULT_PS1 = R"(\d [\u@\h \W] \$ )";
+constexpr auto DEFAULT_PS1 = "\033[1;38;5;250m \\u \033[1;37m| \033[1;94m\\W\033[0m";
 
 std::string expand_ps1(const std::string &ps1);
 

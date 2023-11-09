@@ -9,7 +9,9 @@
 #include "types/msh_token.h"
 #include "msh_external.h"
 #include "msh_history.h"
+#include "internal/msh_jobs.h"
 
+#include <cstdio>
 #include <readline/history.h>
 
 std::vector<variable> variables;
@@ -27,13 +29,17 @@ const std::map<TokenType, int> token_flags = {
         {TokenType::VAR_DECL,  0},
         {TokenType::SUBOPEN,   UNSUPPORTED | COMMAND_SEPARATOR},
         {TokenType::SUBCLOSE,  UNSUPPORTED},
-        {TokenType::AMP,       UNSUPPORTED | COMMAND_SEPARATOR},
+        {TokenType::AMP,       COMMAND_SEPARATOR},
         {TokenType::AND,       UNSUPPORTED},
-        {TokenType::PIPE,      UNSUPPORTED | COMMAND_SEPARATOR},
+        {TokenType::PIPE,      COMMAND_SEPARATOR},
         {TokenType::OR,        UNSUPPORTED},
-        {TokenType::OUT,       UNSUPPORTED},
-        {TokenType::IN,        UNSUPPORTED},
-        {TokenType::SEMICOLON, UNSUPPORTED | COMMAND_SEPARATOR},
+        {TokenType::OUT,       REDIRECT},
+        {TokenType::OUT_APPEND,REDIRECT},
+        {TokenType::IN,        REDIRECT},
+        {TokenType::OUT_AMP,   REDIRECT},
+        {TokenType::IN_AMP,    REDIRECT},
+        {TokenType::AMP_OUT,   REDIRECT},
+        {TokenType::SEMICOLON, COMMAND_SEPARATOR},
 };
 /*NOTE:
  * For COMMAND, GLOB_NO_EXPAND flag is set due to requirement "We ignore masks in the program name."
@@ -45,7 +51,7 @@ const std::map<TokenType, int> token_flags = {
  * @param name Name of the variable.
  * @return Pointer to the variable, @c nullptr otherwise
  */
-variable *get_variable(const std::string &name) {
+variable *get_variable(std::string_view name) {
     for (auto &var : variables) {
         if (var.name == name) {
             return &var;
@@ -100,6 +106,7 @@ void msh_init() {
     setenv("PATH", new_path.c_str(), 1);
     set_variable("PATH", new_path);
 
+    init_job_control();
     // TODO! Read some .mshrc file and execute it to support setup scripts.
     //  Path should be provided by the build system or via config file by the user
 }

@@ -22,7 +22,7 @@ int mecho(int argc, char **argv) {
         if (handle_help(argc, argv, doc)) {
             return 0;
         }
-    } catch (std::exception &e) {
+    } catch (const std::exception &) {
         // For mecho we don't care about invalid arguments. Treat them as arguments.
     }
 

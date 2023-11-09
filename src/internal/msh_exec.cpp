@@ -5,18 +5,16 @@
 // Created by andrew on 10/8/23.
 //
 
-#include <unistd.h>
-#include <sys/wait.h>
-#include <cstring>
-#include <fstream>
-
 #include "internal/msh_utils.h"
 #include "internal/msh_exec.h"
 #include "internal/msh_parser.h"
+#include "internal/msh_jobs.h"
 
-#include "msh_external.h"
-
+#include <unistd.h>
+#include <cstring>
+#include <fstream>
 #include <sys/stat.h>
+
 
 // Define GNU extension for execvpe on some systems
 #ifndef _GNU_SOURCE
@@ -25,7 +23,6 @@
 
 int exec_line_no = 0;
 std::string exec_path;
-
 
 /**
  * @brief Executes a script line by line.
@@ -81,50 +78,83 @@ int msh_execve(char **argv) {
         } else {
             struct stat st{};
             if (stat(argv[0], &st) == 0 && S_ISDIR(st.st_mode)) {
-                print_error(std::string(argv[0]) + ": Is a directory");
+                msh_error(std::string(argv[0]) + ": Is a directory");
                 status = UNKNOWN_ERROR;
             } else {
-                print_error(std::string(argv[0]) + ": " + strerror(errno));
+                msh_error(std::string(argv[0]) + ": " + strerror(errno));
                 status = UNKNOWN_ERROR;
             }
         }
     } else {
         execvpe(argv[0], argv, environ);
         if (errno == ENOENT) {
-            print_error("Command not found: " + std::string(argv[0]));
+            msh_error("Command not found: " + std::string(argv[0]));
             status = COMMAND_NOT_FOUND;
         } else {
-            print_error(strerror(errno));
+            msh_error(strerror(errno));
             status = UNKNOWN_ERROR;
         }
     }
     return status;
 }
 
-/**
- * @brief Forks and executes a command using msh_execve().
- *
- * @param argc Number of arguments.
- * @param argv Array of arguments.
- * @return Exit status of the command.
- *
- * @see fork
- * @see waitpid
- * @see msh_execve
- */
-int msh_exec(int, char **argv) {
-    int pid = fork();
+int msh_exec_simple(simple_command &cmd, int pipe_in = STDIN_FILENO, int pipe_out = STDOUT_FILENO, int flags = 0) {
     int status = 0;
+    bool to_fork;
+    bool is_builtin = flags & BUILTIN;
+    bool is_async = flags & ASYNC;
 
-    if (pid == 0) {
-        exit(msh_execve(argv));
-    } else if (pid < 0) {
-        print_error(strerror(errno));
-        status = UNKNOWN_ERROR;
-    } else {
-        waitpid(pid, &status, 0);
-        return WEXITSTATUS(status);
+    to_fork = pipe_in != STDIN_FILENO || pipe_out != STDOUT_FILENO || !is_builtin || is_async;
+
+    if (!to_fork) {
+        std::vector<int> fd_to_close;
+        if (auto res = cmd.do_redirects(&fd_to_close); res != 0) {
+            return res;
+        }
+        status = builtin_commands.at(cmd.argv[0])(cmd.argc, cmd.argv_c.data());
+        cmd.undo_redirects(fd_to_close);
+        return status;
     }
 
-    return status;
+    pid_t pid = fork();
+    if (pid == 0) {
+        if (pipe_in != STDIN_FILENO) {
+            dup2(pipe_in, STDIN_FILENO);
+            close(pipe_in);
+        }
+        if (pipe_out != STDOUT_FILENO) {
+            dup2(pipe_out, STDOUT_FILENO);
+            close(pipe_out);
+        }
+        if (auto res = cmd.do_redirects(nullptr); res != 0) {
+            exit(res);
+        }
+
+        if (is_builtin) {
+            status = builtin_commands.at(cmd.argv[0])(cmd.argc, cmd.argv_c.data());
+        } else {
+            status = msh_execve(cmd.argv_c.data());
+        }
+        exit(status);
+    } else if (pid < 0) {
+        msh_error(strerror(errno));
+        return UNKNOWN_ERROR;
+    } else {
+        add_process(pid, flags, cmd.argv);
+
+        if (is_async) {
+            std::cout << "[" << no_background_processes() << "] " << pid << std::endl;
+            return status;
+        }
+        if (flags & FORK_NO_WAIT) {
+            return status;
+        }
+        return wait_for_process(pid);
+    }
+}
+
+int msh_exec_internal(command &cmd, int in, int out, int flags) {
+    return std::visit([&in, &out, &flags](auto &&arg) -> int {
+        return arg->execute(in, out, flags);
+    }, cmd.cmd);
 }

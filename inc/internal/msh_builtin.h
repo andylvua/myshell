@@ -5,7 +5,7 @@
 #ifndef TEMPLATE_MSH_BUILTIN_H
 #define TEMPLATE_MSH_BUILTIN_H
 
-#include "types/msh_command.h"
+#include "internal/msh_error.h"
 #include "types/msh_builtin_doc.h"
 
 #include <map>
@@ -13,7 +13,9 @@
 #include <cstring>
 #include <iostream>
 
-extern const std::map<std::string, command::func_t> internal_commands;
+using func_t = int (*)(int, char **);
+
+extern const std::map<std::string, func_t> builtin_commands;
 
 extern std::map<std::string, std::string> aliases;
 
@@ -38,5 +40,7 @@ int msource(int argc, char **argv);
 int malias(int argc, char **argv);
 
 int munalias(int argc, char **argv);
+
+int mjobs(int argc, char **argv);
 
 #endif //TEMPLATE_MSH_BUILTIN_H

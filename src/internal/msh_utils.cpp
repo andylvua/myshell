@@ -12,6 +12,7 @@
 #include "internal/msh_internal.h"
 #include "internal/msh_builtin.h"
 #include "internal/msh_parser.h"
+#include "internal/msh_exec.h"
 
 #include <glob.h>
 #include <vector>
@@ -20,7 +21,6 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
-#include <boost/asio.hpp>
 
 
 /**
@@ -37,7 +37,7 @@
  * @see token_flags
  * @see set_variable
  */
-void set_variables(std::vector<Token> &tokens) {
+void set_variables(tokens_t &tokens) {
     for (auto it = tokens.begin(); it != tokens.end(); ++it) {
         auto &token = *it;
         if (token.type == TokenType::VAR_DECL) {
@@ -74,10 +74,10 @@ void set_variables(std::vector<Token> &tokens) {
  * @see aliases
  * @see lexer()
  */
-void expand_aliases(std::vector<Token> &tokens) {
+void expand_aliases(tokens_t &tokens) {
     std::vector<std::string> expanded;
     expanded.reserve(aliases.size());
-    std::stack<std::pair<int, std::vector<Token>>> stack;
+    std::stack<std::pair<int, tokens_t>> stack;
     stack.emplace(0, tokens);
 
     size_t expansion_pointer = 0;
@@ -122,6 +122,7 @@ void expand_aliases(std::vector<Token> &tokens) {
     }
 }
 
+
 /**
  * @brief Expand variables within a vector of tokens.
  *
@@ -138,7 +139,7 @@ void expand_aliases(std::vector<Token> &tokens) {
  * @see token_flags
  * @see get_variable
  */
-void expand_vars(std::vector<Token> &tokens) {
+void expand_vars(tokens_t &tokens) {
     std::string stop_chars = "$=:\'\" \t\n";
     // TODO! Move to a global constant. Provide some documentation on
     //  metacharacters and syntax used by the shell
@@ -198,8 +199,8 @@ void expand_vars(std::vector<Token> &tokens) {
  * @see token_flags
  * @see glob
  */
-void expand_glob(std::vector<Token> &tokens) {
-    std::vector<Token> expanded_tokens;
+void expand_glob(tokens_t &tokens) {
+    tokens_t expanded_tokens;
 
     for (size_t i = 0; i < tokens.size(); i++) {
         if (!tokens[i].get_flag(GLOB_EXPAND)) {
@@ -231,7 +232,7 @@ void expand_glob(std::vector<Token> &tokens) {
  * @brief Squash the adjacent tokens flagged as WORD_LIKE.
  * @param tokens A vector of tokens to process.
  */
-void squash_tokens(std::vector<Token> &tokens) {
+void squash_tokens(tokens_t &tokens) {
     if (tokens.empty()) {
         return;
     }
@@ -239,7 +240,7 @@ void squash_tokens(std::vector<Token> &tokens) {
                    [](Token &a, Token &b) {
                        if (a.get_flag(WORD_LIKE) && b.get_flag(WORD_LIKE)) {
                            a.value += b.value;
-                           b.type = TokenType::EMPTY;
+                           b.set_type(TokenType::EMPTY);
                        }
                        return a;
                    });
@@ -254,46 +255,59 @@ void squash_tokens(std::vector<Token> &tokens) {
  * @see Token
  * @see token_flags
  */
-int check_syntax(const std::vector<Token> &tokens) {
+void check_syntax(const tokens_t &tokens) {
     for (auto const &token: tokens) {
         if (token.get_flag(UNSUPPORTED)) {
-            print_error("Unsupported token: " + token.value);
-            return 1;
+            throw msh_exception("unsupported token: " + std::string{token.value});
         }
         if (token.open_until) {
-            print_error("Unclosed delimiter: " + std::string{token.open_until});
-            return 1;
+            throw msh_exception("unclosed delimiter: " + std::string{token.open_until});
         }
     }
-
-    return 0;
 
     // TODO! Currently only checks for unsupported tokens and unclosed delimiters.
     //  Add proper syntax checking for unexpected tokens, etc. Add support for multiline input
 }
 
-
 /**
- * @brief Split a vector of tokens into a vector of arguments for further execution.
- *
- * Only WORD_LIKE tokens are extracted.
- *
- * @param tokens A vector of tokens to split.
- * @return A vector of strings containing the extracted tokens.
- *
- * @see Token
- * @see token_flags
+ FIXME: Invalidated documentation
  */
-std::vector<std::string> split_tokens(const std::vector<Token> &tokens) {
-    std::vector<std::string> args;
-    for (auto const &token: tokens) {
-        if (token.get_flag(WORD_LIKE) && !token.value.empty()) {
-            args.push_back(token.value);
-        }
-    }
-    return args;
+simple_command_ptr make_simple_command(const tokens_t &tokens) {
+    simple_command command(tokens);
+
+    return std::make_shared<simple_command>(std::move(command));
 }
 
+/**
+ FIXME: Invalidated documentation
+ */
+command split_commands(const tokens_t &tokens) {
+	tokens_t current_command_tokens;
+    struct command res_command;
+    connection_command_ptr connection;
+    auto simple = &res_command.cmd;
+
+	for (const auto & token : tokens) {
+	      if (token.get_flag(COMMAND_SEPARATOR)) {
+              *simple = make_simple_command(current_command_tokens);
+
+	          command new_cmd(std::make_shared<connection_command>());
+              connection = std::get<connection_command_ptr>(new_cmd.cmd);
+	          connection->lhs = res_command;
+	          connection->connector = token;
+
+              simple = &connection->rhs.cmd;
+
+              res_command = new_cmd;
+	          current_command_tokens.clear();
+	          continue;
+	      }
+          current_command_tokens.push_back(token);
+	}
+
+    *simple = make_simple_command(current_command_tokens);
+	return res_command;
+}
 
 /**
  * @brief Process a vector of tokens.
@@ -310,16 +324,12 @@ std::vector<std::string> split_tokens(const std::vector<Token> &tokens) {
  * @see squash_tokens
  * @see check_syntax
  */
-int process_tokens(std::vector<Token> &tokens) {
+void process_tokens(tokens_t &tokens) {
     expand_aliases(tokens);
-
-    if (check_syntax(tokens) != 0) {
-        return 1;
-    }
 
     expand_vars(tokens);
     set_variables(tokens);
+
     expand_glob(tokens);
     squash_tokens(tokens);
-    return 0;
 }

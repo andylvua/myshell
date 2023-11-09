@@ -5,28 +5,33 @@
 #ifndef TEMPLATE_UTILS_H
 #define TEMPLATE_UTILS_H
 
+#include "types/msh_command_fwd.h"
+#include "types/msh_token.h"
+
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
 
-#include "types/msh_command.h"
-#include "types/msh_token.h"
 
 std::string generate_prompt();
 
-void set_variables(std::vector<Token> &tokens);
+void set_variables(tokens_t &tokens);
 
-void expand_glob(std::vector<Token> &tokens);
+void expand_aliases(tokens_t &tokens);
 
-void expand_vars(std::vector<Token> &tokens);
+void expand_glob(tokens_t &tokens);
 
-void squash_tokens(std::vector<Token> &tokens);
+void expand_vars(tokens_t &tokens);
 
-int check_syntax(const std::vector<Token> &tokens);
+void squash_tokens(tokens_t &tokens);
 
-std::vector<std::string> split_tokens(const std::vector<Token> &tokens);
+void process_tokens(tokens_t &tokens);
 
-int process_tokens(std::vector<Token> &tokens);
+void check_syntax(const tokens_t &tokens);
+
+simple_command_ptr make_simple_command(const tokens_t &tokens);
+
+command split_commands(const tokens_t &tokens);
 
 #endif //TEMPLATE_UTILS_H

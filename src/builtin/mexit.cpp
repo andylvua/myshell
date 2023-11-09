@@ -23,8 +23,8 @@ int mexit(int argc, char **argv) {
         if (handle_help(argc, argv, doc)) {
             return 0;
         }
-    } catch (std::exception &e) {
-        print_error(doc.name + ": " + e.what());
+    } catch (const std::exception &e) {
+        msh_error(doc.name + ": " + e.what());
         std::cerr << "Usage: " << doc.name << " " << doc.args << std::endl;
         return 1;
     }
@@ -40,10 +40,10 @@ int mexit(int argc, char **argv) {
 
     try {
         exit(std::stoi(argv[1]));
-    } catch (std::invalid_argument &) {
+    } catch (const std::invalid_argument &) {
         std::cerr << "mexit: numeric argument expected: " << argv[1] << std::endl;
         exit(2);
-    } catch (std::out_of_range &) {
+    } catch (const std::out_of_range &) {
         std::cerr << "mexit: argument out of range: " << argv[1] << std::endl;
         exit(2);
     }

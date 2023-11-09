@@ -8,7 +8,6 @@
 #include "internal/msh_parser.h"
 #include "internal/msh_utils.h"
 #include "internal/msh_builtin.h"
-#include "internal/msh_exec.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -18,22 +17,20 @@
  * @param input The input string to be analyzed.
  * @return A vector of Token objects.
  */
-std::vector<Token> lexer(const std::string &input) {
-    std::vector<Token> tokens;
-    Token currentToken;
-    bool is_quotes = false;
-    bool command_expected = true;
-    char current_char;
-    char next_char;
-    size_t i = 0;
-    size_t len = input.length();
+tokens_t lexer(const std::string &input) {
+    tokens_t tokens;
+    Token currentToken, prev_token;
+    bool is_quotes = false, command_expected = true;
+    char current_char, next_char;
+    size_t i = 0, len = input.length();
 
     while (i < len) {
         current_char = input[i];
         next_char = i + 1 < len ? input[i + 1] : '\0';
+        prev_token = currentToken;
 
         if (!tokens.empty() && tokens.back().type == TokenType::WORD && command_expected) {
-            tokens.back().type = TokenType::COMMAND;
+            tokens.back().set_type(TokenType::COMMAND);
             command_expected = false;
         }
         command_expected |= currentToken.get_flag(COMMAND_SEPARATOR);
@@ -65,26 +62,44 @@ std::vector<Token> lexer(const std::string &input) {
                 i++;
                 break;
             case '&':
-                if (currentToken.type == TokenType::AMP) currentToken.type = TokenType::AND;
+                if (currentToken.type == TokenType::AMP) currentToken.set_type(TokenType::AND);
                 else {
                     tokens.push_back(currentToken);
-                    currentToken = Token(TokenType::AMP, "&");
+                    if (next_char == '>') {
+                        currentToken = Token(TokenType::AMP_OUT, "&>");
+                        ++i;
+                    } else {
+                        currentToken = Token(TokenType::AMP, "&");
+                    }
                 }
                 break;
             case '|':
-                if (currentToken.type == TokenType::PIPE) currentToken.type = TokenType::OR;
+                if (currentToken.type == TokenType::PIPE) currentToken.set_type(TokenType::OR);
                 else {
                     tokens.push_back(currentToken);
                     currentToken = Token(TokenType::PIPE, "|");
                 }
                 break;
             case '>':
-                tokens.push_back(currentToken);
-                currentToken = Token(TokenType::OUT, ">");
+                if (currentToken.type == TokenType::OUT) currentToken.set_type(TokenType::OUT_APPEND);
+                else {
+                    tokens.push_back(currentToken);
+                    if (next_char == '&') {
+                        currentToken = Token(TokenType::OUT_AMP, ">&");
+                        ++i;
+                    } else {
+                        currentToken = Token(TokenType::OUT, ">");
+                    }
+                }
                 break;
             case '<':
                 tokens.push_back(currentToken);
-                currentToken = Token(TokenType::IN, "<");
+                if (next_char == '&') {
+                    currentToken = Token(TokenType::IN_AMP, "<&");
+                    ++i;
+                } else {
+                    currentToken = Token(TokenType::IN, "<");
+                }
                 break;
             case ';':
                 tokens.push_back(currentToken);
@@ -100,7 +115,7 @@ std::vector<Token> lexer(const std::string &input) {
                 break;
             case '=':
                 if (!is_quotes && command_expected) {
-                    currentToken.type = TokenType::VAR_DECL;
+                    currentToken.set_type(TokenType::VAR_DECL);
                 }
                 if (currentToken.type == TokenType::EMPTY) {
                     tokens.push_back(currentToken);
@@ -143,7 +158,7 @@ std::vector<Token> lexer(const std::string &input) {
     tokens.push_back(currentToken);
     tokens.erase(tokens.begin());
     if (!tokens.empty() && tokens.back().type == TokenType::WORD && command_expected) {
-        tokens.back().type = TokenType::COMMAND;
+        tokens.back().set_type(TokenType::COMMAND);
     }
 
     return tokens;
@@ -161,8 +176,8 @@ std::vector<Token> lexer(const std::string &input) {
  *
  * @see lexer()
  * @see process_tokens()
- * @see split_tokens()
- * @see msh_exec()
+ * @see make_simple_command()
+ * @see msh_exec_simple()
  * @see internal_commands
  * @see command
  */
@@ -172,17 +187,8 @@ command parse_input(std::string input) {
         return {};
     }
 
-    std::vector<Token> tokens = lexer(input);
+    tokens_t tokens = lexer(input);
+    check_syntax(tokens);
 
-    if (process_tokens(tokens) != 0) {
-        return {};
-    }
-
-    auto args = split_tokens(tokens);
-    if (args.empty()) {
-        return {};
-    }
-
-    auto exec_func = is_builtin(args[0]) ? internal_commands.at(args[0]) : &msh_exec;
-    return {args, exec_func};
+    return split_commands(tokens);
 }

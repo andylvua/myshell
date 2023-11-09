@@ -6,11 +6,11 @@
 #include "internal/msh_parser.h"
 #include "internal/msh_internal.h"
 
+#include <cstdio>
 #include <readline/readline.h>
 #include <readline/history.h>
 
-
-// MAYBE: Add signal handling
+// MAYBE: Add signal handling. Also see src/internal/jobs.cpp.
 //  Possible behavior: https://www.gnu.org/software/bash/manual/html_node/Signals.html
 // MAYBE: Move `myshell` to a dedicated class. It possibly can reduce the complexity of the project.
 int main(int argc, char *argv[]) {
@@ -25,10 +25,17 @@ int main(int argc, char *argv[]) {
     while ((input_buffer = readline(generate_prompt().data())) != nullptr) {
         add_history(input_buffer);
 
-        auto command = parse_input(input_buffer);
-        command.execute();
+        update_jobs();
+        try {
+            auto command = parse_input(input_buffer);
+            command.execute();
+        } catch (const msh_exception &e) {
+            msh_error(e.what());
+            msh_errno = e.code();
+        }
 
         free(input_buffer);
+        std::cout << std::endl;
     }
 
     return 0;

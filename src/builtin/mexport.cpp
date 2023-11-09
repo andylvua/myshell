@@ -21,19 +21,30 @@ int mexport(int argc, char **argv) {
 
     for (int i = 1; i < argc; i++) {
         auto arg = std::string(argv[i]);
-
         auto pos = arg.find('=');
+
+        std::string var;
+        std::string value;
+
         if (pos == std::string::npos) {
-            continue;
+            if (auto internal_var = get_variable(arg); internal_var != nullptr) {
+                var = internal_var->name;
+                value = internal_var->value;
+            }
+        } else {
+            var = arg.substr(0, pos);
+            value = arg.substr(pos + 1);
+            if (setenv(var.data(), value.data(), 1) != 0) {
+                std::cout << "Couldn't set environment variable " << var << std::endl;
+                return 1;
+            }
+            set_variable(var, value);
         }
 
-        auto var = arg.substr(0, pos);
-        auto value = arg.substr(pos + 1);
         if (setenv(var.data(), value.data(), 1) != 0) {
             std::cout << "Couldn't set environment variable " << var << std::endl;
             return 1;
         }
-        set_variable(var, value);
     }
     return 0;
 }

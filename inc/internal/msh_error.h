@@ -11,9 +11,10 @@ extern int msh_errno;
 
 void error_log();
 
-void print_error(const std::string &msg);
+void msh_error(const std::string &msg);
 
 enum msh_err {
+    INTERNAL_ERROR = 1,
     COMMAND_NOT_FOUND = 127,
     UNKNOWN_ERROR = 128
 };

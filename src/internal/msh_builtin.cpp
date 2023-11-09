@@ -12,7 +12,7 @@
 /**
  * @brief Map of internal commands and their corresponding functions.
  */
-const std::map<std::string, command::func_t> internal_commands = {
+const std::map<std::string, func_t> builtin_commands = {
         {"merrno",   merrno},
         {"mpwd",     mpwd},
         {"mcd",      mcd},
@@ -23,6 +23,7 @@ const std::map<std::string, command::func_t> internal_commands = {
         {".",        msource},
         {"malias",   malias},
         {"munalias", munalias},
+        {"jobs",     mjobs},
 };
 
 /**
@@ -36,7 +37,7 @@ std::map<std::string, std::string> aliases;
  * @return True if command is built-in, false otherwise.
  */
 bool is_builtin(const std::string &cmd) {
-    return internal_commands.contains(cmd);
+    return builtin_commands.contains(cmd);
 }
 
 /**
@@ -71,7 +72,7 @@ bool handle_help(int argc, char **argv, const builtin_doc &doc) {
         } else {
             return false;
         }
-    } catch (po::error &e) {
+    } catch (const po::error &) {
         throw;
     }
 }

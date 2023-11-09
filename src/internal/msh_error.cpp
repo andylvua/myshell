@@ -13,7 +13,7 @@
 /**
  * @brief Log the line number and path of the executed script, if any.
  *
- * @see print_error()
+ * @see msh_error()
  */
 void error_log() {
     if (exec_line_no > 0) {
@@ -30,7 +30,7 @@ void error_log() {
  *
  * @param msg Error message.
  */
-void print_error(const std::string &msg) {
+void msh_error(const std::string &msg) {
     error_log();
     std::cerr << "myshell: " << msg << std::endl;
 }

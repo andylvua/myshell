@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-std::vector<Token> lexer(const std::string &input);
+tokens_t lexer(const std::string &input);
 
 command parse_input(std::string input);
 
