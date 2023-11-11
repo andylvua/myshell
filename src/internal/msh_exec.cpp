@@ -149,7 +149,8 @@ int msh_exec_simple(simple_command &cmd, int pipe_in = STDIN_FILENO, int pipe_ou
         if (flags & FORK_NO_WAIT) {
             return status;
         }
-        return wait_for_process(pid);
+
+        return wait_for_process(pid, &status);
     }
 }
 

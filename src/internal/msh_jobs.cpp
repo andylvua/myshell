@@ -45,23 +45,22 @@ void sigchld_handler(int) {
     }
 }
 
-int wait_for_process(pid_t pid) {
-    int status;
-    while (waitpid(pid, &status, WUNTRACED | WCONTINUED) == -1) {
+int wait_for_process(pid_t pid, int *status) {
+    while (waitpid(pid, status, WUNTRACED | WCONTINUED) != -1) {
         if (errno != EINTR && errno != ECHILD) {
             msh_error(strerror(errno));
             return -1;
         }
     }
 
-    if (WIFEXITED(status)) {
-        status = WEXITSTATUS(status);
-    } else if (WIFSIGNALED(status)) {
-        status = WTERMSIG(status);
+    if (WIFEXITED(*status)) {
+        *status = WEXITSTATUS(*status);
+    } else if (WIFSIGNALED(*status)) {
+        *status = WTERMSIG(*status);
     }
 
     remove_process(pid);
-    return status;
+    return *status;
 }
 
 int reap_children() {

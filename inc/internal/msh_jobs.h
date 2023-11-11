@@ -25,7 +25,7 @@ void init_job_control();
 
 void sigchld_handler(int);
 
-int wait_for_process(pid_t pid);
+int wait_for_process(pid_t pid, int *status);
 
 int reap_children();
 

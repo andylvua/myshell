@@ -239,8 +239,8 @@ void squash_tokens(tokens_t &tokens) {
     std::transform(tokens.begin(), tokens.end() - 1, tokens.begin() + 1, tokens.begin(),
                    [](Token &a, Token &b) {
                        if (a.get_flag(WORD_LIKE) && b.get_flag(WORD_LIKE)) {
-                           a.value += b.value;
-                           b.set_type(TokenType::EMPTY);
+                           b.value = a.value + b.value;
+                           a.set_type(TokenType::EMPTY);
                        }
                        return a;
                    });
