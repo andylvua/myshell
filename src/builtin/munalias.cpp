@@ -27,7 +27,7 @@ int munalias(int argc, char **argv) {
     }
 
     if (argc == 1) {
-        std::cerr << "munalias: wrong number of arguments" << std::endl;
+        msh_error(doc.name + ": wrong number of arguments");
         std::cerr << doc.get_usage() << std::endl;
         return 1;
     }
@@ -37,7 +37,7 @@ int munalias(int argc, char **argv) {
         if (aliases.contains(arg)) {
             aliases.erase(arg);
         } else {
-            std::cerr << "alias " << arg << " not found" << std::endl;
+            msh_error(doc.name + ": " + arg + ": not found");
             return 1;
         }
     }

@@ -16,7 +16,11 @@ allowing users to execute commands and manage files and directories.
 The project is build using C++20 standard. 
 
 - [CMake](https://cmake.org/) (version 3.15 or higher)
-- [GCC](https://gcc.gnu.org/) (version 10.5.0 or higher) or [Clang](https://clang.llvm.org/) (version 14.0.6 or higher)
+- [GCC](https://gcc.gnu.org/) (version 12.3.0 or higher) or [Clang](https://clang.llvm.org/) (version 16.0.6 or higher)
+
+> **Note**
+> 
+> Tested on GCC `13.2.1` and Clang `17.0.3`.
 
 Besides, it heavily relies on the following libraries:
 - [Boost](https://www.boost.org/) (version 1.71.0 or higher)

@@ -138,29 +138,29 @@ using connection_command_t = struct connection_command {
             case PIPE:
                 return execute_pipeline(in, out, flags);
             case SEMICOLON:
-                return execute_sequence(flags);
+                return execute_sequence(in, out, flags);
             case AMP:
-                return execute_background(flags);
+                return execute_background(in, out, flags);
             default:
                 return UNKNOWN_ERROR; // FIXME: Add error handling
         }
     }
 
 private:
-    int execute_background(int flags) {
+    int execute_background(int in, int out, int flags) {
         lhs.set_flags(ASYNC);
         rhs.set_flags(flags & ASYNC);
 
         lhs.execute();
-        rhs.execute();
+        rhs.execute(in, out);
         return msh_errno;
     }
 
-    int execute_sequence(int flags) {
+    int execute_sequence(int in, int out, int flags) {
         rhs.set_flags(flags & ASYNC);
 
         lhs.execute();
-        rhs.execute();
+        rhs.execute(in, out);
         return msh_errno;
     }
 

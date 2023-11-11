@@ -44,7 +44,7 @@ int malias(int argc, char **argv) {
             if (aliases.contains(arg)) {
                 std::cout << "alias " << arg << "=" << "'" << aliases[arg] << "'" << std::endl;
             } else {
-                std::cerr << "alias " << arg << " not found" << std::endl;
+                msh_error(doc.name + ": " + arg + ": not found");
                 return 1;
             }
         } else {

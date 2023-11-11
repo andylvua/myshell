@@ -5,11 +5,11 @@
 // Created by andrew on 10/9/23.
 //
 
-#include "internal/msh_internal.h"
 #include "types/msh_token.h"
 #include "msh_external.h"
 #include "msh_history.h"
 #include "internal/msh_jobs.h"
+#include "internal/msh_internal.h"
 
 #include <cstdio>
 #include <readline/history.h>

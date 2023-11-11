@@ -30,13 +30,13 @@ int mcd(int argc, char **argv) {
     }
 
     if (argc != 2) {
-        std::cerr << "cd: wrong number of arguments" << std::endl;
+        msh_error(doc.name + ": wrong number of arguments");
         std::cerr << doc.get_usage() << std::endl;
         return 1;
     }
 
     if (chdir(argv[1]) != 0) {
-        std::cerr << "Couldn't change directory to " << argv[1] << std::endl;
+        msh_error(doc.name + ": " + strerror(errno) + ": " + argv[1]);
         return 1;
     }
     return 0;

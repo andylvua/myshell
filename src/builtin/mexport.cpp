@@ -35,14 +35,14 @@ int mexport(int argc, char **argv) {
             var = arg.substr(0, pos);
             value = arg.substr(pos + 1);
             if (setenv(var.data(), value.data(), 1) != 0) {
-                std::cout << "Couldn't set environment variable " << var << std::endl;
+                msh_error(std::string(strerror(errno)) + ": " + var);
                 return 1;
             }
             set_variable(var, value);
         }
 
         if (setenv(var.data(), value.data(), 1) != 0) {
-            std::cout << "Couldn't set environment variable " << var << std::endl;
+            msh_error(std::string(strerror(errno)) + ": " + var);
             return 1;
         }
     }

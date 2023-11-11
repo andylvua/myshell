@@ -30,13 +30,13 @@ int mpwd(int argc, char **argv) {
     }
 
     if (argc > 1) {
-        std::cerr << "mpwd: wrong number of arguments" << std::endl;
+        msh_error(doc.name + ": wrong number of arguments");
         std::cerr << doc.get_usage() << std::endl;
         return 1;
     }
     char *cwd = getcwd(nullptr, 0);
     if (cwd == nullptr) {
-        std::cerr << "Error: " << strerror(errno) << std::endl;
+        msh_error(doc.name + ": " + std::string(strerror(errno)));
         return 1;
     }
     std::cout << cwd << std::endl;

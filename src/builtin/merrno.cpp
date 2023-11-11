@@ -30,7 +30,7 @@ int merrno(int argc, char **argv) {
     }
 
     if (argc > 1) {
-        std::cerr << "merrno: wrong number of arguments" << std::endl;
+        msh_error(doc.name + ": wrong number of arguments");
         std::cerr << doc.get_usage() << std::endl;
         return 1;
     }

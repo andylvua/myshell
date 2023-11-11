@@ -18,8 +18,10 @@
  * @return A vector of Token objects.
  */
 tokens_t lexer(const std::string &input) {
+    using enum TokenType;
+
     tokens_t tokens;
-    Token currentToken, prev_token;
+    Token currentToken;
     bool is_quotes = false, command_expected = true;
     char current_char, next_char;
     size_t i = 0, len = input.length();
@@ -27,10 +29,9 @@ tokens_t lexer(const std::string &input) {
     while (i < len) {
         current_char = input[i];
         next_char = i + 1 < len ? input[i + 1] : '\0';
-        prev_token = currentToken;
 
-        if (!tokens.empty() && tokens.back().type == TokenType::WORD && command_expected) {
-            tokens.back().set_type(TokenType::COMMAND);
+        if (!tokens.empty() && tokens.back().type == WORD && command_expected) {
+            tokens.back().set_type(COMMAND);
             command_expected = false;
         }
         command_expected |= currentToken.get_flag(COMMAND_SEPARATOR);
@@ -42,7 +43,10 @@ tokens_t lexer(const std::string &input) {
         if (currentToken.open_until) {
             if (current_char == currentToken.open_until) {
                 currentToken.open_until = '\0';
-            } else if (current_char == '\\' && next_char == '"' && currentToken.open_until == '\"') {
+            } else if (current_char == '\\' && next_char == '\\') {
+                currentToken.value += current_char;
+                ++i;
+            } else if (current_char == '\\' && next_char == '"' && currentToken.open_until == '"') {
                 currentToken.value += next_char;
                 ++i;
             } else {
@@ -54,72 +58,72 @@ tokens_t lexer(const std::string &input) {
 
         switch (current_char) {
             case '\\':
-                if (currentToken.type != TokenType::WORD) {
+                if (currentToken.type != WORD) {
                     tokens.push_back(currentToken);
-                    currentToken = Token(TokenType::WORD);
+                    currentToken = Token(WORD);
                 }
                 currentToken.value += next_char;
                 i++;
                 break;
             case '&':
-                if (currentToken.type == TokenType::AMP) currentToken.set_type(TokenType::AND);
+                if (currentToken.type == AMP) currentToken.set_type(AND);
                 else {
                     tokens.push_back(currentToken);
                     if (next_char == '>') {
-                        currentToken = Token(TokenType::AMP_OUT, "&>");
+                        currentToken = Token(AMP_OUT, "&>");
                         ++i;
                     } else {
-                        currentToken = Token(TokenType::AMP, "&");
+                        currentToken = Token(AMP, "&");
                     }
                 }
                 break;
             case '|':
-                if (currentToken.type == TokenType::PIPE) currentToken.set_type(TokenType::OR);
+                if (currentToken.type == PIPE) currentToken.set_type(OR);
                 else {
                     tokens.push_back(currentToken);
-                    currentToken = Token(TokenType::PIPE, "|");
+                    currentToken = Token(PIPE, "|");
                 }
                 break;
             case '>':
-                if (currentToken.type == TokenType::OUT) currentToken.set_type(TokenType::OUT_APPEND);
+                if (currentToken.type == OUT) currentToken.set_type(OUT_APPEND);
                 else {
                     tokens.push_back(currentToken);
                     if (next_char == '&') {
-                        currentToken = Token(TokenType::OUT_AMP, ">&");
+                        currentToken = Token(OUT_AMP, ">&");
                         ++i;
                     } else {
-                        currentToken = Token(TokenType::OUT, ">");
+                        currentToken = Token(OUT, ">");
                     }
                 }
                 break;
             case '<':
                 tokens.push_back(currentToken);
                 if (next_char == '&') {
-                    currentToken = Token(TokenType::IN_AMP, "<&");
+                    currentToken = Token(IN_AMP, "<&");
                     ++i;
                 } else {
-                    currentToken = Token(TokenType::IN, "<");
+                    currentToken = Token(IN, "<");
                 }
                 break;
             case ';':
                 tokens.push_back(currentToken);
-                currentToken = Token(TokenType::SEMICOLON, ";");
+                currentToken = Token(SEMICOLON, ";");
                 break;
             case '\"':
                 tokens.push_back(currentToken);
-                currentToken = Token(TokenType::DQSTRING, '\"');
+                currentToken = Token(DQSTRING, '\"');
                 break;
             case '\'':
                 tokens.push_back(currentToken);
-                currentToken = Token(TokenType::SQSTRING, '\'');
+                currentToken = Token(SQSTRING, '\'');
                 break;
             case '=':
                 if (!is_quotes && command_expected) {
-                    currentToken.set_type(TokenType::VAR_DECL);
+                    currentToken.set_type(VAR_DECL);
                 }
-                if (currentToken.type == TokenType::EMPTY) {
+                if (currentToken.type == EMPTY) {
                     tokens.push_back(currentToken);
-                    currentToken = Token(TokenType::WORD);
+                    currentToken = Token(WORD);
                 }
                 currentToken.value += current_char;
                 break;
@@ -133,22 +137,22 @@ tokens_t lexer(const std::string &input) {
                 break;
             case '(':
                 tokens.push_back(currentToken);
-                currentToken = Token(TokenType::SUBOPEN, "(");
+                currentToken = Token(SUBOPEN, "(");
                 break;
             case ')':
                 tokens.push_back(currentToken);
-                currentToken = Token(TokenType::SUBCLOSE, ")");
+                currentToken = Token(SUBCLOSE, ")");
                 break;
             case ' ':
                 tokens.push_back(currentToken);
-                currentToken = Token(TokenType::EMPTY);
+                currentToken = Token(EMPTY);
                 break;
             default:
-                if (currentToken.type == TokenType::WORD || currentToken.type == TokenType::VAR_DECL) {
+                if (currentToken.type == WORD || currentToken.type == VAR_DECL) {
                     currentToken.value += current_char;
                 } else {
                     tokens.push_back(currentToken);
-                    currentToken = Token(TokenType::WORD);
+                    currentToken = Token(WORD);
                     currentToken.value = current_char;
                 }
         }
@@ -157,8 +161,8 @@ tokens_t lexer(const std::string &input) {
 
     tokens.push_back(currentToken);
     tokens.erase(tokens.begin());
-    if (!tokens.empty() && tokens.back().type == TokenType::WORD && command_expected) {
-        tokens.back().set_type(TokenType::COMMAND);
+    if (!tokens.empty() && tokens.back().type == WORD && command_expected) {
+        tokens.back().set_type(COMMAND);
     }
 
     return tokens;

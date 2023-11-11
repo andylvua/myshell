@@ -33,7 +33,7 @@ int mexit(int argc, char **argv) {
         exit(0);
     }
     if (argc > 2) {
-        std::cerr << "mexit: wrong number of arguments" << std::endl;
+        msh_error(doc.name + ": wrong number of arguments");
         std::cerr << doc.get_usage() << std::endl;
         return 1;
     }
@@ -41,10 +41,10 @@ int mexit(int argc, char **argv) {
     try {
         exit(std::stoi(argv[1]));
     } catch (const std::invalid_argument &) {
-        std::cerr << "mexit: numeric argument expected: " << argv[1] << std::endl;
+        msh_error(doc.name + ": invalid argument: " + argv[1]);
         exit(2);
     } catch (const std::out_of_range &) {
-        std::cerr << "mexit: argument out of range: " << argv[1] << std::endl;
+        msh_error(doc.name + ": argument out of range: " + argv[1]);
         exit(2);
     }
 }

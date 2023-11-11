@@ -23,7 +23,7 @@ const std::map<std::string, func_t> builtin_commands = {
         {".",        msource},
         {"malias",   malias},
         {"munalias", munalias},
-        {"jobs",     mjobs},
+        {"mjobs",    mjobs},
 };
 
 /**

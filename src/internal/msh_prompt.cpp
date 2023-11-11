@@ -12,6 +12,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/filesystem.hpp>
+#include <readline/readline.h>
 
 /**
  * @brief Expand a PS1 (Prompt String 1) format string into its corresponding values.
@@ -113,8 +114,8 @@ std::string generate_prompt() {
     static auto constexpr MARKER_SUCCESS = "✔";
     static auto constexpr MARKER_FAILURE = "✘";
 
-    struct winsize w{};
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    int cols = 0;
+    rl_get_screen_size(nullptr, &cols);
 
     std::string prompt;
     if (auto ps1 = getenv("PS1"); ps1 == nullptr) {
@@ -124,17 +125,17 @@ std::string generate_prompt() {
     }
 
     auto marker_color = msh_errno == 0 ? "\033[32m" : "\033[31m";
-    auto exit_marker = FOREGROUND + std::string("\uE0B2") + BACKGROUND + " " + marker_color;
+    auto exit_marker = BACKGROUND + std::string(" ") + marker_color;
     auto indicator = msh_errno == 0 ? MARKER_SUCCESS : MARKER_FAILURE;
 
     exit_marker += (msh_errno == 0 ? "" : std::to_string(msh_errno) + " ") + indicator + " " + RESET;
-    auto indicator_pos = std::to_string(w.ws_col - exit_marker.size() + 36);
+    auto indicator_pos = std::to_string(cols - exit_marker.size() + 36);
 
     std::string escape_seq;
-    escape_seq += "\033[" + indicator_pos + "G";
-    escape_seq += exit_marker;
-    escape_seq += "\033[0G";
 
-    escape_seq += BACKGROUND + prompt + BACKGROUND + " " + RESET + FOREGROUND + "\uE0B0" + RESET + " ";
+    escape_seq += BACKGROUND + prompt + BACKGROUND + " \033[1;37m|";
+    escape_seq += exit_marker;
+    escape_seq += FOREGROUND + std::string("") + RESET + " ";
+
     return escape_seq;
 }

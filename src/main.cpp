@@ -21,9 +21,13 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    rl_reset_terminal(nullptr); // To prevent `readline` from messing up the terminal.
+
     char *input_buffer;
     while ((input_buffer = readline(generate_prompt().data())) != nullptr) {
-        add_history(input_buffer);
+        if (input_buffer[0] != '\0') {
+            add_history(input_buffer);
+        }
 
         update_jobs();
         try {

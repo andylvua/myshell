@@ -30,14 +30,8 @@ int msource(int argc, char **argv) {
         return 1;
     }
 
-    if (argc != 2) {
-        std::cerr << "msource: wrong number of arguments" << std::endl;
-        std::cerr << doc.get_usage() << std::endl;
-        return 1;
-    }
-
     if (std::ifstream script(argv[1]); !script.good()) {
-        std::cerr << "Couldn't open file " << argv[1] << std::endl;
+        msh_error(std::string(argv[1]) + ": " + strerror(errno));
         return 1;
     }
 
