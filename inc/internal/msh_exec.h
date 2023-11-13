@@ -16,6 +16,7 @@ extern std::string exec_path;
 constexpr int BUILTIN = 1 << 0;
 constexpr int FORK_NO_WAIT = 1 << 1;
 constexpr int ASYNC = 1 << 2;
+constexpr int FORCE_PIPE = 1 << 3;
 
 
 int msh_exec_script(const char *path);

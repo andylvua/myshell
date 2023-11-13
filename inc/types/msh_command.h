@@ -151,7 +151,7 @@ private:
         lhs.set_flags(ASYNC);
         rhs.set_flags(flags & ASYNC);
 
-        lhs.execute();
+        flags & FORCE_PIPE ? lhs.execute(in, out) : lhs.execute();
         rhs.execute(in, out);
         return msh_errno;
     }
@@ -159,7 +159,7 @@ private:
     int execute_sequence(int in, int out, int flags) {
         rhs.set_flags(flags & ASYNC);
 
-        lhs.execute();
+        flags & FORCE_PIPE ? lhs.execute(in, out) : lhs.execute();
         rhs.execute(in, out);
         return msh_errno;
     }

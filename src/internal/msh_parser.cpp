@@ -10,6 +10,7 @@
 #include "internal/msh_builtin.h"
 
 #include <boost/algorithm/string.hpp>
+#include <stack>
 
 /**
  * Perform lexical analysis on the given input string, breaking it down into a vector of tokens.
@@ -21,10 +22,11 @@ tokens_t lexer(const std::string &input) {
     using enum TokenType;
 
     tokens_t tokens;
-    Token currentToken;
-    bool is_quotes = false, command_expected = true;
-    char current_char, next_char;
+    Token current_token;
+    bool command_expected = true;
+    char current_char, next_char, open_until = '\0';
     size_t i = 0, len = input.length();
+    std::stack<char> substitutions;
 
     while (i < len) {
         current_char = input[i];
@@ -34,23 +36,79 @@ tokens_t lexer(const std::string &input) {
             tokens.back().set_type(COMMAND);
             command_expected = false;
         }
-        command_expected |= currentToken.get_flag(COMMAND_SEPARATOR);
+        command_expected |= current_token.get_flag(COMMAND_SEPARATOR);
 
-        if (current_char == '\'' || current_char == '\"') {
-            is_quotes = !is_quotes;
+        if (current_char == open_until && substitutions.empty()) {
+            open_until = '\0';
+            ++i;
+            continue;
         }
 
-        if (currentToken.open_until) {
-            if (current_char == currentToken.open_until) {
-                currentToken.open_until = '\0';
-            } else if (current_char == '\\' && next_char == '\\') {
-                currentToken.value += current_char;
+        if (open_until != '\0' && current_token.type == EMPTY) {
+            switch (open_until) {
+                case '"':
+                    current_token.set_type(DQSTRING);
+                    break;
+                case '\'':
+                    current_token.set_type(SQSTRING);
+                    break;
+                default:;
+            }
+        }
+
+        if (open_until == '\'') {
+            while (i < len && input[i] != '\'') {
+                current_token.value += input[i];
                 ++i;
-            } else if (current_char == '\\' && next_char == '"' && currentToken.open_until == '"') {
-                currentToken.value += next_char;
+            }
+            continue;
+        }
+
+        if (current_char == '$' && next_char == '(') {
+            if (!substitutions.empty()) {
+                substitutions.push('\0');
+                current_token.value += current_char;
+                ++i;
+                continue;
+            }
+            substitutions.push('\0');
+            tokens.push_back(current_token);
+            current_token = Token(COM_SUB);
+            if (open_until == '"') {
+                current_token.set_flag(NO_WORD_SPLIT);
+            }
+            i += 2;
+            continue;
+        }
+
+        if (!substitutions.empty()) {
+            if (current_char == '"' || current_char == '\'') {
+                auto &top = substitutions.top();
+                top = top == '\0' ? current_char : '\0';
+            }
+            if (current_char == ')' && substitutions.top() == '\0') {
+                substitutions.pop();
+                if (substitutions.empty()) {
+                    tokens.push_back(current_token);
+                    current_token = Token(EMPTY);
+                    i++;
+                    continue;
+                }
+            }
+            current_token.value += current_char;
+            ++i;
+            continue;
+        }
+
+        if (open_until == '"') {
+            if (current_char == '\\' && next_char == '\\') {
+                current_token.value += current_char;
+                ++i;
+            } else if (current_char == '\\' && next_char == '"' && open_until == '"') {
+                current_token.value += next_char;
                 ++i;
             } else {
-                currentToken.value += current_char;
+                current_token.value += current_char;
             }
             ++i;
             continue;
@@ -58,108 +116,127 @@ tokens_t lexer(const std::string &input) {
 
         switch (current_char) {
             case '\\':
-                if (currentToken.type != WORD) {
-                    tokens.push_back(currentToken);
-                    currentToken = Token(WORD);
+                if (current_token.type != WORD) {
+                    tokens.push_back(current_token);
+                    current_token = Token(WORD);
                 }
-                currentToken.value += next_char;
+                current_token.value += next_char;
                 i++;
                 break;
             case '&':
-                if (currentToken.type == AMP) currentToken.set_type(AND);
+                if (current_token.type == AMP) current_token.set_type(AND);
                 else {
-                    tokens.push_back(currentToken);
+                    tokens.push_back(current_token);
                     if (next_char == '>') {
-                        currentToken = Token(AMP_OUT, "&>");
+                        current_token = Token(AMP_OUT, "&>");
                         ++i;
                     } else {
-                        currentToken = Token(AMP, "&");
+                        current_token = Token(AMP, "&");
                     }
                 }
                 break;
             case '|':
-                if (currentToken.type == PIPE) currentToken.set_type(OR);
+                if (current_token.type == PIPE) current_token.set_type(OR);
                 else {
-                    tokens.push_back(currentToken);
-                    currentToken = Token(PIPE, "|");
+                    tokens.push_back(current_token);
+                    current_token = Token(PIPE, "|");
                 }
                 break;
             case '>':
-                if (currentToken.type == OUT) currentToken.set_type(OUT_APPEND);
+                if (current_token.type == OUT) current_token.set_type(OUT_APPEND);
                 else {
-                    tokens.push_back(currentToken);
+                    tokens.push_back(current_token);
                     if (next_char == '&') {
-                        currentToken = Token(OUT_AMP, ">&");
+                        current_token = Token(OUT_AMP, ">&");
                         ++i;
                     } else {
-                        currentToken = Token(OUT, ">");
+                        current_token = Token(OUT, ">");
                     }
                 }
                 break;
             case '<':
-                tokens.push_back(currentToken);
+                tokens.push_back(current_token);
                 if (next_char == '&') {
-                    currentToken = Token(IN_AMP, "<&");
+                    current_token = Token(IN_AMP, "<&");
                     ++i;
                 } else {
-                    currentToken = Token(IN, "<");
+                    current_token = Token(IN, "<");
                 }
                 break;
             case ';':
-                tokens.push_back(currentToken);
-                currentToken = Token(SEMICOLON, ";");
+                tokens.push_back(current_token);
+                current_token = Token(SEMICOLON, ";");
                 break;
             case '\"':
-                tokens.push_back(currentToken);
-                currentToken = Token(DQSTRING, '\"');
+                tokens.push_back(current_token);
+                current_token = Token(DQSTRING);
+                open_until = '\"';
                 break;
             case '\'':
-                tokens.push_back(currentToken);
-                currentToken = Token(SQSTRING, '\'');
+                tokens.push_back(current_token);
+                current_token = Token(SQSTRING);
+                open_until = '\'';
                 break;
             case '=':
-                if (!is_quotes && command_expected) {
-                    currentToken.set_type(VAR_DECL);
+                if (open_until == '\0' && command_expected) {
+                    current_token.set_type(VAR_DECL);
                 }
-                if (currentToken.type == EMPTY) {
-                    tokens.push_back(currentToken);
-                    currentToken = Token(WORD);
+                if (current_token.type == EMPTY) {
+                    tokens.push_back(current_token);
+                    current_token = Token(WORD);
                 }
-                currentToken.value += current_char;
+                current_token.value += current_char;
                 break;
             case '#':
-                if (!is_quotes) {
-                    tokens.push_back(currentToken);
+                if (open_until == '\0') {
+                    tokens.push_back(current_token);
                     while (i < len && input[i] != '\n') {
                         i++;
                     }
                 }
                 break;
             case '(':
-                tokens.push_back(currentToken);
-                currentToken = Token(SUBOPEN, "(");
+                tokens.push_back(current_token);
+                current_token = Token(SUBOPEN, "(");
                 break;
             case ')':
-                tokens.push_back(currentToken);
-                currentToken = Token(SUBCLOSE, ")");
+                tokens.push_back(current_token);
+                current_token = Token(SUBCLOSE, ")");
                 break;
             case ' ':
-                tokens.push_back(currentToken);
-                currentToken = Token(EMPTY);
+                if (current_token.type != EMPTY) {
+                    tokens.push_back(current_token);
+                    current_token = Token(EMPTY);
+                }
                 break;
             default:
-                if (currentToken.type == WORD || currentToken.type == VAR_DECL) {
-                    currentToken.value += current_char;
+                if (current_token.type == WORD || current_token.type == VAR_DECL) {
+                    current_token.value += current_char;
                 } else {
-                    tokens.push_back(currentToken);
-                    currentToken = Token(WORD);
-                    currentToken.value = current_char;
+                    tokens.push_back(current_token);
+                    current_token = Token(WORD);
+                    current_token.value = current_char;
                 }
         }
         i++;
     }
 
-    tokens.push_back(currentToken);
+    if (current_token.type != EMPTY) {
+        tokens.push_back(current_token);
+    }
+
+    if (!substitutions.empty()) {
+        auto top = substitutions.top();
+        if (top == '\0') {
+            throw msh_exception("expected ')'", INTERNAL_ERROR);
+        } else {
+            throw msh_exception("expected '" + std::string(1, top) + "'", INTERNAL_ERROR);
+        }
+    }
+    if (open_until != '\0') {
+        throw msh_exception("unclosed delimiter: " + std::string(1, open_until), INTERNAL_ERROR);
+    }
+
     tokens.erase(tokens.begin());
     if (!tokens.empty() && tokens.back().type == WORD && command_expected) {
         tokens.back().set_type(COMMAND);

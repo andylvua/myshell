@@ -23,11 +23,37 @@
 #include <boost/date_time.hpp>
 
 
+void insert_tokens(tokens_t &tokens, tokens_t::iterator &pos, const tokens_t &sub_tokens) {
+    pos = tokens.erase(pos);
+    pos = tokens.insert(pos, sub_tokens.begin(), sub_tokens.end());
+    std::advance(pos, sub_tokens.size() - 1);
+}
+
+tokens_t split_words(const std::string_view input) {
+    using namespace boost::algorithm;
+    tokens_t tokens;
+
+    const auto ifs = getenv("IFS");
+    std::string delimeters = ifs != nullptr ? ifs : " \t\n";
+
+    std::vector<std::string> words;
+    split(words, input, is_any_of(delimeters), token_compress_on);
+
+    for (auto &word: words) {
+        tokens.emplace_back(TokenType::WORD, std::move(word));
+        tokens.emplace_back(TokenType::EMPTY);
+    }
+    if (!tokens.empty()) {
+        tokens.pop_back();
+    }
+    return tokens;
+}
+
 /**
  * Sets internal variables based on VAR_DECL tokens in a vector of tokens.
  *
  * Iterates through a vector of tokens, identifies VAR_DECL tokens, and sets corresponding
- * variables based on their values. If a VAR_DECL token is followed by a token flagged as IS_STRING
+ * variables based on their values. If a VAR_DECL token is followed by a token flagged as WORD_LIKE
  * without separators, the two tokens are combined and the resulting string is assigned to the variable.
  *
  * @param tokens A vector of tokens to process and update variable values.
@@ -41,7 +67,7 @@ void set_variables(tokens_t &tokens) {
     for (auto it = tokens.begin(); it != tokens.end(); ++it) {
         auto &token = *it;
         if (token.type == TokenType::VAR_DECL) {
-            if (auto next = (it + 1); next != tokens.end() && next->get_flag(IS_STRING)) {
+            if (auto next = (it + 1); next != tokens.end() && next->get_flag(WORD_LIKE)) {
                 token.value += next->value;
                 tokens.erase(next);
             }
@@ -140,23 +166,24 @@ void expand_aliases(tokens_t &tokens) {
  * @see get_variable
  */
 void expand_vars(tokens_t &tokens) {
-    std::string stop_chars = "$=:\'\" \t\n";
-    // TODO! Move to a global constant. Provide some documentation on
-    //  metacharacters and syntax used by the shell
-
-    for (auto &token: tokens) {
+    for (auto it = tokens.begin(); it != tokens.end(); ++it) {
+        auto &token = *it;
         if (!token.get_flag(VAR_EXPAND)) {
             continue;
         }
         std::string new_value;
         for (size_t i = 0; i < token.value.size(); i++) {
+            if (token.value[i] == '\\' && i + 1 < token.value.size() && token.value[i + 1] == '$') {
+                new_value += token.value[++i];
+                continue;
+            }
             if (token.value[i] != '$') {
                 new_value += token.value[i];
                 continue;
             }
             std::string var_name;
             for (size_t j = i + 1; j < token.value.size(); j++) {
-                if (stop_chars.find(token.value[j]) != std::string::npos) {
+                if (!isalnum(token.value[j]) && token.value[j] != '_') {
                     break;
                 }
                 var_name += token.value[j];
@@ -178,7 +205,57 @@ void expand_vars(tokens_t &tokens) {
             }
             new_value += var;
         }
-        token.value = std::move(new_value);
+
+        if (!token.get_flag(NO_WORD_SPLIT)) {
+            auto sub_tokens = split_words(new_value);
+            insert_tokens(tokens, it, sub_tokens);
+        } else {
+            token.value = std::move(new_value);
+        }
+    }
+}
+
+void substitute_commands(tokens_t &tokens) {
+    for (auto it = tokens.begin(); it != tokens.end(); ++it) {
+        auto &token = *it;
+        if (token.type != TokenType::COM_SUB) {
+            continue;
+        }
+
+        int pipefd[2];
+        if (pipe(pipefd) == -1) {
+            throw msh_exception("command substitution: " + std::string{strerror(errno)});
+        }
+        auto command = parse_input(token.value);
+        command.set_flags(FORCE_PIPE);
+        command.execute(STDIN_FILENO, pipefd[1]);
+        close(pipefd[1]);
+
+        std::string result;
+        char buf[1024];
+        ssize_t read_bytes;
+
+        while (true) {
+            read_bytes = read(pipefd[0], buf, sizeof(buf));
+            if (read_bytes == -1) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                throw msh_exception("command substitution: " + std::string{strerror(errno)});
+            }
+            if (read_bytes == 0) {
+                break;
+            }
+            result.append(buf, read_bytes);
+        }
+        boost::trim_right_if(result, boost::is_any_of("\n"));
+
+        if (!token.get_flag(NO_WORD_SPLIT)) {
+            auto sub_tokens = split_words(result);
+            insert_tokens(tokens, it, sub_tokens);
+        } else {
+            token.value = std::move(result);
+        }
     }
 }
 
@@ -201,13 +278,14 @@ void expand_vars(tokens_t &tokens) {
  */
 void expand_glob(tokens_t &tokens) {
     tokens_t expanded_tokens;
-
-    for (size_t i = 0; i < tokens.size(); i++) {
-        if (!tokens[i].get_flag(GLOB_EXPAND)) {
+    for (auto it = tokens.begin(); it != tokens.end(); ++it) {
+        auto &token = *it;
+        if (!token.get_flag(GLOB_EXPAND)) {
             continue;
         }
+
         glob_t glob_result;
-        glob(tokens[i].value.data(), GLOB_TILDE, nullptr, &glob_result);
+        glob(token.value.data(), GLOB_TILDE, nullptr, &glob_result);
         if (glob_result.gl_pathc == 0) {
             globfree(&glob_result);
             continue;
@@ -219,10 +297,7 @@ void expand_glob(tokens_t &tokens) {
                 expanded_tokens.emplace_back(TokenType::EMPTY);
             }
         }
-        auto insert_to = tokens.begin() + static_cast<int>(i);
-        tokens.erase(insert_to);
-        tokens.insert(insert_to, expanded_tokens.begin(), expanded_tokens.end());
-        i += static_cast<int>(expanded_tokens.size()) - 1;
+        insert_tokens(tokens, it, expanded_tokens);
         globfree(&glob_result);
         expanded_tokens.clear();
     }
@@ -260,12 +335,9 @@ void check_syntax(const tokens_t &tokens) {
         if (token.get_flag(UNSUPPORTED)) {
             throw msh_exception("unsupported token: " + std::string{token.value});
         }
-        if (token.open_until) {
-            throw msh_exception("unclosed delimiter: " + std::string{token.open_until});
-        }
     }
 
-    // TODO! Currently only checks for unsupported tokens and unclosed delimiters.
+    // TODO! Currently only checks for unsupported tokens.
     //  Add proper syntax checking for unexpected tokens, etc. Add support for multiline input
 }
 
@@ -281,7 +353,9 @@ simple_command_ptr make_simple_command(const tokens_t &tokens) {
 /**
  FIXME: Invalidated documentation
  */
-command split_commands(const tokens_t &tokens) {
+command split_commands(tokens_t &tokens) {
+    expand_aliases(tokens);
+
 	tokens_t current_command_tokens;
     struct command res_command;
     connection_command_ptr connection;
@@ -325,11 +399,9 @@ command split_commands(const tokens_t &tokens) {
  * @see check_syntax
  */
 void process_tokens(tokens_t &tokens) {
-    expand_aliases(tokens);
-
     expand_vars(tokens);
+    substitute_commands(tokens);
     set_variables(tokens);
-
     expand_glob(tokens);
     squash_tokens(tokens);
 }

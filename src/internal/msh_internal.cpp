@@ -23,9 +23,9 @@ const std::map<TokenType, int> token_flags = {
 #ifdef ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION
         {TokenType::DQSTRING,  WORD_LIKE | IS_STRING | VAR_EXPAND | GLOB_EXPAND},
 #else
-        {TokenType::DQSTRING,  WORD_LIKE | IS_STRING | VAR_EXPAND},
+        {TokenType::DQSTRING, WORD_LIKE | NO_WORD_SPLIT | VAR_EXPAND},
 #endif
-        {TokenType::SQSTRING,  WORD_LIKE | IS_STRING},
+        {TokenType::SQSTRING, WORD_LIKE | NO_WORD_SPLIT},
         {TokenType::VAR_DECL,  0},
         {TokenType::SUBOPEN,   UNSUPPORTED | COMMAND_SEPARATOR},
         {TokenType::SUBCLOSE,  UNSUPPORTED},
@@ -40,6 +40,7 @@ const std::map<TokenType, int> token_flags = {
         {TokenType::IN_AMP,    REDIRECT},
         {TokenType::AMP_OUT,   REDIRECT},
         {TokenType::SEMICOLON, COMMAND_SEPARATOR},
+        {TokenType::COM_SUB,   WORD_LIKE},
 };
 /*NOTE:
  * For COMMAND, GLOB_NO_EXPAND flag is set due to requirement "We ignore masks in the program name."

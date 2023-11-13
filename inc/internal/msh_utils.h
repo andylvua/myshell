@@ -16,6 +16,8 @@
 
 std::string generate_prompt();
 
+tokens_t split_words(const std::string_view input);
+
 void set_variables(tokens_t &tokens);
 
 void expand_aliases(tokens_t &tokens);
@@ -32,6 +34,6 @@ void check_syntax(const tokens_t &tokens);
 
 simple_command_ptr make_simple_command(const tokens_t &tokens);
 
-command split_commands(const tokens_t &tokens);
+command split_commands(tokens_t &tokens);
 
 #endif //TEMPLATE_UTILS_H
