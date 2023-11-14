@@ -68,6 +68,9 @@ struct redirect {
                 type = OUT;
                 in.fd = STDOUT_FILENO;
                 break;
+            case TokenType::AMP_APPEND:
+                both_err_out = true;
+                [[fallthrough]];
             case TokenType::OUT_APPEND:
                 type = OUT_APPEND;
                 in.fd = STDOUT_FILENO;

@@ -135,18 +135,62 @@ using connection_command_t = struct connection_command {
     int execute(int in = STDIN_FILENO, int out = STDOUT_FILENO, int flags = 0) {
         switch (connector.type) {
             using enum TokenType;
+            case TokenType::PIPE_AMP:
+                flags |= PIPE_STDERR;
+                [[fallthrough]];
             case PIPE:
                 return execute_pipeline(in, out, flags);
             case SEMICOLON:
                 return execute_sequence(in, out, flags);
             case AMP:
                 return execute_background(in, out, flags);
+            case TokenType::AND:
+            case TokenType::OR:
+                return execute_conditional(in, out, flags, connector.type);
             default:
                 return UNKNOWN_ERROR; // FIXME: Add error handling
         }
     }
 
 private:
+    /**
+     * @brief Executes conditional connections, i.e. @c && and @c ||.
+     *
+     * If the left-hand side command returns 0 and the connection is @c && or
+     * if the left-hand side command returns non-zero and the connection is @c ||,
+     * the right-hand side command is executed.
+     *
+     * @param in File descriptor to use as stdin.
+     * @param out File descriptor to use as stdout
+     * @param flags Flags to pass to the command.
+     * @param op Type of the connection.
+     *
+     * @return Exit code of the command.
+     */
+    int execute_conditional(int in, int out, int flags, TokenType op) {
+        lhs.set_flags(flags & ASYNC);
+        rhs.set_flags(flags & ASYNC);
+
+        auto res = flags & FORCE_PIPE ? lhs.execute(in, out) : lhs.execute();
+        if ((res == 0 && op == TokenType::AND) || (res != 0 && op == TokenType::OR)) {
+            rhs.execute(in, out);
+        }
+
+        return res;
+    }
+
+    /**
+     * @brief Executes background connections, i.e. @c &.
+     *
+     * Executes the left-hand side command and then the right-hand side command
+     * asynchronously.
+     *
+     * @param in File descriptor to use as stdin.
+     * @param out File descriptor to use as stdout
+     * @param flags Flags to pass to the command.
+     *
+     * @return Exit code of the command.
+     */
     int execute_background(int in, int out, int flags) {
         lhs.set_flags(ASYNC);
         rhs.set_flags(flags & ASYNC);

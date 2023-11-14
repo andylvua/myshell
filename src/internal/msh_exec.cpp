@@ -46,8 +46,13 @@ int msh_exec_script(const char *path) {
 
     while (std::getline(script, line)) {
         ++exec_line_no;
-        auto command = parse_input(line);
-        command.execute();
+        try {
+            auto command = parse_input(line);
+            command.execute();
+        } catch (const msh_exception &e) {
+            msh_error(e.what());
+            msh_errno = e.code();
+        }
     }
     return 0;
 }
@@ -107,8 +112,10 @@ int msh_exec_simple(simple_command &cmd, int pipe_in = STDIN_FILENO, int pipe_ou
     to_fork = pipe_in != STDIN_FILENO || pipe_out != STDOUT_FILENO || !is_builtin || is_async;
 
     if (!to_fork) {
+        // In this case the command can only be a builtin one
         std::vector<int> fd_to_close;
         if (auto res = cmd.do_redirects(&fd_to_close); res != 0) {
+            cmd.undo_redirects(fd_to_close);
             return res;
         }
         status = builtin_commands.at(cmd.argv[0])(cmd.argc, cmd.argv_c.data());
@@ -124,6 +131,9 @@ int msh_exec_simple(simple_command &cmd, int pipe_in = STDIN_FILENO, int pipe_ou
         }
         if (pipe_out != STDOUT_FILENO) {
             dup2(pipe_out, STDOUT_FILENO);
+            if (flags & PIPE_STDERR) {
+                dup2(pipe_out, STDERR_FILENO);
+            }
             close(pipe_out);
         }
         if (auto res = cmd.do_redirects(nullptr); res != 0) {

@@ -22,7 +22,7 @@ tokens_t lexer(const std::string &input) {
     using enum TokenType;
 
     tokens_t tokens;
-    Token current_token;
+    Token current_token, previous_token;
     bool command_expected = true;
     char current_char, next_char, open_until = '\0';
     size_t i = 0, len = input.length();
@@ -31,6 +31,7 @@ tokens_t lexer(const std::string &input) {
     while (i < len) {
         current_char = input[i];
         next_char = i + 1 < len ? input[i + 1] : '\0';
+        previous_token = current_token.type == EMPTY ? previous_token : current_token;
 
         if (!tokens.empty() && tokens.back().type == WORD && command_expected) {
             tokens.back().set_type(COMMAND);
@@ -120,38 +121,63 @@ tokens_t lexer(const std::string &input) {
                     tokens.push_back(current_token);
                     current_token = Token(WORD);
                 }
-                current_token.value += next_char;
-                i++;
+                if (next_char == '$') {
+                    current_token.value += current_char;
+                } else {
+                    current_token.value += next_char;
+                    ++i;
+                }
                 break;
             case '&':
-                if (current_token.type == AMP) current_token.set_type(AND);
-                else {
-                    tokens.push_back(current_token);
-                    if (next_char == '>') {
+                tokens.push_back(current_token);
+
+                switch (next_char) {
+                    case '&':
+                        current_token = Token(AND, "&&");
+                        ++i;
+                        break;
+                    case '>':
                         current_token = Token(AMP_OUT, "&>");
                         ++i;
-                    } else {
+                        break;
+                    default:
                         current_token = Token(AMP, "&");
-                    }
+
                 }
                 break;
             case '|':
-                if (current_token.type == PIPE) current_token.set_type(OR);
-                else {
-                    tokens.push_back(current_token);
-                    current_token = Token(PIPE, "|");
+                tokens.push_back(current_token);
+                switch (next_char) {
+                    case '|':
+                        current_token = Token(OR, "||");
+                        ++i;
+                        break;
+                    case '&':
+                        current_token = Token(PIPE_AMP, "|&");
+                        ++i;
+                        break;
+                    default:
+                        current_token = Token(PIPE, "|");
                 }
                 break;
             case '>':
-                if (current_token.type == OUT) current_token.set_type(OUT_APPEND);
-                else {
-                    tokens.push_back(current_token);
-                    if (next_char == '&') {
+                if (current_token.type == AMP_OUT) {
+                    current_token.set_type(AMP_APPEND);
+                    break;
+                }
+
+                tokens.push_back(current_token);
+                switch (next_char) {
+                    case '&':
                         current_token = Token(OUT_AMP, ">&");
                         ++i;
-                    } else {
+                        break;
+                    case '>':
+                        current_token = Token(OUT_APPEND, ">>");
+                        ++i;
+                        break;
+                    default:
                         current_token = Token(OUT, ">");
-                    }
                 }
                 break;
             case '<':
@@ -217,6 +243,10 @@ tokens_t lexer(const std::string &input) {
                     current_token = Token(WORD);
                     current_token.value = current_char;
                 }
+        }
+
+        if (current_token.get_flag(COMMAND_SEPARATOR) && previous_token.get_flag(COMMAND_SEPARATOR)) {
+            throw msh_exception("unexpected token: " + current_token.value, INTERNAL_ERROR);
         }
         i++;
     }

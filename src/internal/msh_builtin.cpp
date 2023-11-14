@@ -13,17 +13,17 @@
  * @brief Map of internal commands and their corresponding functions.
  */
 const std::map<std::string, func_t> builtin_commands = {
-        {"merrno",   merrno},
-        {"mpwd",     mpwd},
-        {"mcd",      mcd},
-        {"mexit",    mexit},
-        {"mecho",    mecho},
-        {"mexport",  mexport},
-        {"msource",  msource},
-        {".",        msource},
-        {"malias",   malias},
-        {"munalias", munalias},
-        {"mjobs",    mjobs},
+        {"merrno",   &merrno},
+        {"mpwd",     &mpwd},
+        {"mcd",      &mcd},
+        {"mexit",    &mexit},
+        {"mecho",    &mecho},
+        {"mexport",  &mexport},
+        {"msource",  &msource},
+        {".",        &msource},
+        {"malias",   &malias},
+        {"munalias", &munalias},
+        {"mjobs",    &mjobs},
 };
 
 /**

@@ -12,6 +12,10 @@ redirects_t parse_redirects(tokens_t &tokens) {
     using std::ranges::find_if;
     using std::ranges::all_of;
 
+    auto all_digits = [](std::string_view s) {
+        return all_of(s.begin(), s.end(), [](char c) { return std::isdigit(c); });
+    };
+
     redirects_t redirects;
     for (auto it = tokens.begin(); it != tokens.end(); ++it) {
         auto token = *it;
@@ -21,9 +25,9 @@ redirects_t parse_redirects(tokens_t &tokens) {
 
         redirect r(token);
 
-        if (auto prev = (it - 1); it != tokens.begin() && token.type != TokenType::AMP_OUT) {
-            if (prev->get_flag(WORD_LIKE) &&
-            all_of(prev->value, [](char c) { return std::isdigit(c); })) {
+        auto is_amp_x = token.type == TokenType::AMP_OUT || token.type == TokenType::AMP_APPEND;
+        if (auto prev = (it - 1); it != tokens.begin() && !is_amp_x) {
+            if (prev->get_flag(WORD_LIKE) && all_digits(prev->value)) {
                 int fd;
                 bool is_fd = true;
                 try {
@@ -48,8 +52,9 @@ redirects_t parse_redirects(tokens_t &tokens) {
             throw msh_exception("parse error near " + token.value, INTERNAL_ERROR);
         }
 
-        if (token.type == TokenType::IN_AMP || token.type == TokenType::OUT_AMP) {
-            if (all_of(next_word->value, [](char c) { return std::isdigit(c); })) {
+        auto is_x_amp = token.type == TokenType::OUT_AMP || token.type == TokenType::IN_AMP;
+        if (is_x_amp) {
+            if (all_digits(next_word->value)) {
                 int fd;
                 try {
                     fd = std::stoi(next_word->value);

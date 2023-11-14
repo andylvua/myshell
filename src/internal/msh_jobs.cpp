@@ -66,10 +66,12 @@ int wait_for_process(pid_t pid, int *status) {
 int reap_children() {
     int status;
     pid_t pid;
+    int n = 0;
     while ((pid = waitpid(-1, &status, 0)) > 0) {
         remove_process(pid);
+        n++;
     }
-    return 0;
+    return n;
 }
 
 int no_background_processes() {
