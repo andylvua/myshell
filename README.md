@@ -1,8 +1,8 @@
 # Lab work 6: myshell 2 - a custom shell implementation
 Authors (team): 
-- [Yurii Kharabara](https://github.com/YuriiKharabara)
 - [Andrii Yaroshevych](https://github.com/andylvua)
 - [Pavlo Kryven](https://github.com/codefloww)
+- [Yurii Kharabara](https://pbs.twimg.com/media/F-bInKaWIAA2LoW?format=jpg&name=medium)
 
 ## Description
 This project is a custom command-line interpreter that provides a user interface for executing commands. 
@@ -15,7 +15,7 @@ The documentation for the whole project is available here:
 #### https://andylvua.github.io/myshell-docs/
 
 This also includes documentation for external utilities shipped with the shell. Fell free to read it, as 
-it may be useful for understanding the project and it's components.
+it may be useful for understanding the project and its components.
 
 ## Compilation and running
 
@@ -50,12 +50,14 @@ Besides, it heavily relies on the following libraries:
     ./build/myshell
     ```
 
-> **Note**
+> **Warning**
 > 
-> Alternatively, you can use the provided `compile.sh` script to compile and run the project:
-> ```bash
-> ./compile.sh -O
-> ```
+> The project contains multiple targets. The main target is `myshell`. Don't forget to also compile
+> the external utilities shipped with the shell if you are using IDE for compilation. 
+> 
+> Currently, the following external utilities are supported:
+> - `mycat`
+> - `myrls`
 
 ## Usage
 
@@ -80,7 +82,7 @@ Also, this allows us to use the persistent history between different runs of the
 
 If you want to change the path to the history file, consider changing the `MSH_HISTORY_PATH` variable in the `CMakeLists.txt` file to your desired path.
 
-## Updates from myshell 1
+## Updates since myshell 1
 
 All mistakes and bugs from `myshell 1` were fixed. The shell is now fully functional and supports all features from the main task.
 
@@ -196,6 +198,20 @@ echo $(mexport var="world!"; echo $(echo "Hello, $var" | cat))
 
 will print `Hello, world!` to the standard output.
 
+Command substitution is not performed inside single quotation marks:
+```bash
+echo 'Hello, $(whoami)!'
+```
+
+will print `Hello, $(whoami)!`.
+
+Quotes may appear inside the command substitution, so the following command are also supported:
+```bash
+echo "$(echo 'Mixed "Quotes" support in $SHELL')"
+echo $(echo ")")
+```
+
+and will print `Mixed "Quotes" support in $SHELL` and `)` respectively.
 ### Job Control
 
 `myshell` supports the simplest job control for illustrative purposes. It allows users to manage background processes.
@@ -241,7 +257,7 @@ $ mjobs
 > only after the whole pipeline is executed. This is not crucial for the shell, nevertheless, it is not kind of
 > expected behavior.
 
-Job control is implemented in the [src/internal/msh_jobs.cpp](src/internal/msh_jobs.cpp) file and planned to be improved in the future to support more advanced features such as process groups and job control signals.
+Job control is implemented in the [msh_jobs.cpp](src/internal/msh_jobs.cpp) file and planned to be improved in the future to support more advanced features such as process groups and job control signals.
 
 ## Implementation details
 
@@ -278,17 +294,18 @@ When `myshell` starts, it initializes essential configurations:
 `myshell` enters its main loop, continuously awaiting user input. 
 Within this loop, the following operations are performed:
 
-- Read User Input <br><br>
+- Read User Input <br>
 The shell waits for the user to enter a command.
-<br><br>
-- Tokenization and syntax checking <br><br>
+
+- Tokenization and syntax checking <br>
 The input is tokenized using a lexer/tokenizer, breaking the user input into individual tokens representing commands, arguments, or special symbols. If the input is invalid, the shell prints an error message and stops the execution of the current input.
-<br><br>
-- Building Command Tree <br><br>
+
+- Building Command Tree <br>
 The shell builds a command tree from the tokens. The command tree is a tree-like structure that represents the pipeline with specific types of connections. This process is not trivial, so it's described in more detail in the [Command Tree](#command-tree) section.
-<br><br>
+<br>
 The alias expansion is performed during this step, i.e. on the whole command line.
-- Command Execution <br><br>
+
+- Command Execution <br>
 The shell executes the command tree. Before execution of each simple command, the tokens processing is performed. This process is described in more detail in the [Command Execution](#command-execution) section.
 
 
@@ -302,12 +319,12 @@ This section describes the process of building the command tree in more detail.
 
 Consider the following command:
 ```bash
-ls -l -R | grep "txt" | wc -l > out.txt & echo "Hello, world!"; echo "Bye, world!"
+ls -l -R | grep "txt" | wc -l > out.txt & echo "Hello world!"; echo "Bye world!"
 ```
 
 The command tree for this command is shown below:
 
-![Command Tree](./assets/command_tree.png)
+![Command Tree](https://i.imgur.com/pMyCgzK.png)
 
 The root node of the tree is always a `command`. `command` can either hold a pointer to a `simple_command` or a `connection_command`.
 `connection_command` represents a connection between two commands. It can be either a pipeline, a sequential execution, a background execution, or a logical operator.
@@ -315,7 +332,7 @@ It holds a type of connection and objects of type `command` that are connected b
 
 Note that leaf nodes of the tree are always `simple_command`s. `simple_command` is the execution unit of the shell. It holds the command arguments, redirections, and other information necessary for execution.
 
-The command tree is built iteratively by the `split_commands()` function located in the [src/internal/msh_utils.cpp](src/internal/msh_utils.cpp) file. You can read more about it and other shell functions in the documentation provided above.
+The command tree is built iteratively by the `split_commands()` function located in the [msh_utils.cpp](src/internal/msh_utils.cpp) file. You can read more about it and other shell functions in the documentation provided above.
 
 ### Command Execution
 
@@ -323,10 +340,10 @@ The execution starts from the root node of the command tree.
 
 Each type of command has its own execution function that implements the corresponding logic. Feel free to read the documentation for `msh_command.h` to learn more about them.
 
-As stated above, the elementary execution unit of the shell is a `simple_command`. They are executed by the `msh_exec_simple()` function located in the [src/internal/msh_exec.cpp](src/internal/msh_exec.cpp) file.
+As stated above, the elementary execution unit of the shell is a `simple_command`. They are executed by the `msh_exec_simple()` function located in the [msh_exec.cpp](src/internal/msh_exec.cpp) file.
 The execution of each node is performed recursively in a post-order manner. For better understanding, here is an illustration of the execution order for the command tree shown above:
 
-![Command Execution](./assets/command_execution.png)
+![Execution Order](https://i.imgur.com/LvBPJyR.png)
 
 Before executing a simple command, if it's located within a connection command, the execution function of the latter is responsible for performing the necessary operations, such as setting up pipes, proper execution flags, etc.
 
@@ -338,15 +355,15 @@ This step involves several sub-steps:
     - _Setting Internal Variables_: The shell processes variable declarations and sets the corresponding internal variables.
     - _Wildcard Expansion_: Wildcard characters are expanded into their corresponding file names.
     - _Tokens Merging_: The shell merges adjacent tokens into a single token if necessary.
-  
+
+This steps is performed by shell utilities located in the [msh_utils.cpp](src/internal/msh_utils.cpp) file.
+
 > **Note**
 > 
 > The result of variable expansion and command substitution is subject to word splitting and filename expansion. To prevent this, enclose the variable in double quotation marks.
 
-<br><br>
 - Argument Processing <br>
 The processed tokens are split into command arguments.
-<br><br>
 
 - Command Execution <br>
 Depending on the command's nature:
@@ -396,7 +413,17 @@ Depending on the command's nature:
   
   Assignment statements of the form `key=value` may also appear as arguments to the `malias` and `mexport` built-in commands. Other than that, variable declarations are treated as regular arguments.
 
-## Additional Tasks (related to myshell 1)
+## Additional Tasks
+
+Although we didn't implement any additional tasks related to `myshell 2`, we've implemented some additional features that we believe are worth mentioning:
+
+1. Full support of redirections, including appending and duplicating file descriptors.
+2. Full support of connections, including pipelines, background, and sequential execution, logical operators.
+3. Full support of command substitution, including nested command substitutions and quoting.
+4. Simple implementation of job control, including background processes and `mjobs` built-in command.
+5. Bash-like word splitting algorithms that support quoting and escaping.
+
+### Additional Tasks (myshell 1)
 
 All additional features from `Additional task 2` are supported:
 
@@ -465,13 +492,3 @@ For more information, please use the `--help` flag.
 > **Note**
 > 
 > Aliases can appear in alias itself. `myshell` incorporates a robust alias expansion mechanism that prevents infinite alias expansion loops.
-
-### Additional Tasks (related to myshell 2)
-
-Although we didn't implement any additional tasks related to `myshell 2`, we've implemented some additional features that we believe are worth mentioning:
-
-1. Full support of redirections, including appending and duplicating file descriptors.
-2. Full support of connections, including pipelines, background, and sequential execution, logical operators.
-3. Full support of command substitution, including nested command substitutions and quoting.
-4. Simple implementation of job control, including background processes and `mjobs` built-in command.
-5. Bash-like word splitting algorithms that support quoting and escaping.
