@@ -46,6 +46,10 @@ int mexport(int argc, char **argv) {
             set_variable(var, value);
         }
 
+        if (var.empty()) {
+            return 0;
+        }
+
         if (setenv(var.data(), value.data(), 1) != 0) {
             msh_error(std::string(strerror(errno)) + ": " + var);
             return 1;
