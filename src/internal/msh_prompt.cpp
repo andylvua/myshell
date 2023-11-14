@@ -133,10 +133,8 @@ std::string generate_prompt() {
     auto indicator = msh_errno == 0 ? MARKER_SUCCESS : MARKER_FAILURE;
 
     exit_marker += (msh_errno == 0 ? "" : std::to_string(msh_errno) + " ") + indicator + " " + RESET;
-    auto indicator_pos = std::to_string(cols - exit_marker.size() + 36);
 
     std::string escape_seq;
-
     escape_seq += BACKGROUND + prompt + BACKGROUND + " \033[1;37m|";
     escape_seq += exit_marker;
     escape_seq += FOREGROUND + std::string("") + RESET + " ";

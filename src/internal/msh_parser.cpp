@@ -114,7 +114,7 @@ tokens_t lexer(const std::string &input) {
             if (current_char == '\\' && next_char == '\\') {
                 current_token.value += current_char;
                 ++i;
-            } else if (current_char == '\\' && next_char == '"' && open_until == '"') {
+            } else if (current_char == '\\' && next_char == '"') {
                 current_token.value += next_char;
                 ++i;
             } else {

@@ -308,9 +308,7 @@ void substitute_commands(tokens_t &tokens) {
             throw msh_exception("command substitution: " + std::string{strerror(errno)});
         }
 
-        auto command = parse_input(token.value);
         pid_t pid = fork();
-
         if (pid == -1) {
             throw msh_exception("command substitution: " + std::string{strerror(errno)});
         } else if (pid > 0) {
@@ -350,6 +348,8 @@ void substitute_commands(tokens_t &tokens) {
             close(pipefd[0]);
             dup2(pipefd[1], STDOUT_FILENO);
             close(pipefd[1]);
+
+            auto command = parse_input(token.value);
             exit(command.execute());
         }
     }
