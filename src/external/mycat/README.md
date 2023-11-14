@@ -1,4 +1,4 @@
-# Lab 2. `mycat` utility
+# Lab work 2. mycat utility
 
 > Team members: Andrii Yaroshevych, Pavlo Krynenko
 

@@ -1,4 +1,4 @@
-# Lab work 5: `myrls` utility
+# Lab work 5: myrls utility
 > Authors: Andrii Yaroshevych, Pavlo Kryven, Yurii Kharabara
 > 
 > Variant: `-`
