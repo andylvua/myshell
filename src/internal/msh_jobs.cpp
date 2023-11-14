@@ -86,11 +86,9 @@ void sigchld_handler(int) {
  * @see remove_process()
  */
 int wait_for_process(pid_t pid, int *status) {
-    while (waitpid(pid, status, WUNTRACED | WCONTINUED) != -1) {
-        if (errno != EINTR && errno != ECHILD) {
-            msh_error(strerror(errno));
-            return -1;
-        }
+    while (waitpid(pid, status, WUNTRACED | WCONTINUED) != -1) {}
+    if (errno != ECHILD) {
+        msh_error("failed to wait for process " + std::to_string(pid) + ": " + strerror(errno));
     }
 
     if (WIFEXITED(*status)) {

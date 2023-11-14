@@ -272,35 +272,50 @@ void substitute_commands(tokens_t &tokens) {
         if (pipe(pipefd) == -1) {
             throw msh_exception("command substitution: " + std::string{strerror(errno)});
         }
+
         auto command = parse_input(token.value);
-        command.set_flags(FORCE_PIPE);
-        command.execute(STDIN_FILENO, pipefd[1]);
-        close(pipefd[1]);
+        pid_t pid = fork();
 
-        std::string result;
-        char buf[1024];
-        ssize_t read_bytes;
+        if (pid == -1) {
+            throw msh_exception("command substitution: " + std::string{strerror(errno)});
+        } else if (pid > 0) {
+            int status;
+            close(pipefd[1]);
 
-        while (true) {
-            read_bytes = read(pipefd[0], buf, sizeof(buf));
-            if (read_bytes == -1) {
-                if (errno == EINTR) {
-                    continue;
+            waitpid(pid, &status, 0);
+
+            std::string result;
+            char buf[1024];
+            ssize_t read_bytes;
+
+            while (true) {
+                read_bytes = read(pipefd[0], buf, sizeof(buf));
+                if (read_bytes == -1) {
+                    if (errno == EINTR) {
+                        continue;
+                    }
+                    throw msh_exception("command substitution: " + std::string{strerror(errno)});
                 }
-                throw msh_exception("command substitution: " + std::string{strerror(errno)});
+                if (read_bytes == 0) {
+                    break;
+                }
+                result.append(buf, read_bytes);
             }
-            if (read_bytes == 0) {
-                break;
-            }
-            result.append(buf, read_bytes);
-        }
-        boost::trim_right_if(result, boost::is_any_of("\n"));
+            close(pipefd[0]);
 
-        if (!token.get_flag(NO_WORD_SPLIT)) {
-            auto sub_tokens = split_words(result);
-            insert_tokens(tokens, it, sub_tokens);
+            boost::trim_right_if(result, boost::is_any_of("\n"));
+
+            if (!token.get_flag(NO_WORD_SPLIT)) {
+                auto sub_tokens = split_words(result);
+                insert_tokens(tokens, it, sub_tokens);
+            } else {
+                token.value = std::move(result);
+            }
         } else {
-            token.value = std::move(result);
+            close(pipefd[0]);
+            dup2(pipefd[1], STDOUT_FILENO);
+            close(pipefd[1]);
+            exit(command.execute());
         }
     }
 }

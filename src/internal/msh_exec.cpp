@@ -171,13 +171,14 @@ int msh_exec_simple(simple_command &cmd, int pipe_in = STDIN_FILENO, int pipe_ou
         }
         if (pipe_out != STDOUT_FILENO) {
             dup2(pipe_out, STDOUT_FILENO);
-            if (flags & PIPE_STDERR) {
-                dup2(pipe_out, STDERR_FILENO);
-            }
             close(pipe_out);
         }
         if (auto res = cmd.do_redirects(nullptr); res != 0) {
             exit(res);
+        }
+
+        if (flags & PIPE_STDERR) {
+            dup2(pipe_out, STDERR_FILENO);
         }
 
         if (is_builtin) {
