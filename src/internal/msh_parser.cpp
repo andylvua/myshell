@@ -213,8 +213,12 @@ tokens_t lexer(const std::string &input) {
                 open_until = '\'';
                 break;
             case '=':
-                if (open_until == '\0' && command_expected) {
-                    current_token.set_type(VAR_DECL);
+                if (open_until == '\0') {
+                    if (command_expected) {
+                        current_token.set_type(VAR_DECL);
+                    } else {
+                        current_token.set_flag(ASSIGNMENT_WORD);
+                    }
                 }
                 if (current_token.type == EMPTY) {
                     tokens.push_back(current_token);

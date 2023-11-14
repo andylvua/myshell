@@ -16,20 +16,20 @@
 /**
  * @brief Internal map of built-in commands.
  *
- * Maps command names to their corresponding functions.
+ * Maps command names to their corresponding built-in commands.
  */
-const std::map<std::string, func_t> builtin_commands = {
-        {"merrno",   &merrno},
-        {"mpwd",     &mpwd},
-        {"mcd",      &mcd},
-        {"mexit",    &mexit},
-        {"mecho",    &mecho},
-        {"mexport",  &mexport},
-        {"msource",  &msource},
-        {".",        &msource},
-        {"malias",   &malias},
-        {"munalias", &munalias},
-        {"mjobs",    &mjobs},
+const std::map<std::string, builtin> builtin_commands = {
+        {"merrno",   {&merrno,   0}},
+        {"mpwd",     {&mpwd,     0}},
+        {"mcd",      {&mcd,      0}},
+        {"mexit",    {&mexit,    0}},
+        {"mecho",    {&mecho,    0}},
+        {"mexport",  {&mexport,  DECLARATION_COMMAND}},
+        {"msource",  {&msource,  0}},
+        {".",        {&msource,  0}},
+        {"malias",   {&malias,   DECLARATION_COMMAND}},
+        {"munalias", {&munalias, 0}},
+        {"mjobs",    {&mjobs,    0}},
 };
 
 /**

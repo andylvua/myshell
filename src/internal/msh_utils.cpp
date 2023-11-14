@@ -28,6 +28,41 @@
 
 
 /**
+ * @brief Perform postprocessing on a vector of tokens.
+ *
+ * Postprocessing can include some specific operations that must be performed after
+ * tokenization, but before any other processing steps. For example, variable declarations
+ * that appear as `malias` or `mexport` commands are not eligible for word splitting and
+ * filename expansion.
+ *
+ * @param tokens A vector of tokens to postprocess.
+ *
+ * @see Token
+ * @see token_flags
+ * @see lexer()
+ */
+void postprocess_tokens(tokens_t &tokens) {
+    using enum TokenType;
+    builtin current_command{};
+
+    for (auto it = tokens.begin(); it != tokens.end(); ++it) {
+        if (it->type == COMMAND) {
+            auto builtin = builtin_commands.find(it->value);
+            if (builtin != builtin_commands.end()) {
+                current_command = builtin->second;
+            }
+        }
+        if (it->get_flag(ASSIGNMENT_WORD)) {
+            auto next = it + 1;
+            if (next != tokens.end() &&
+            (it->type == VAR_DECL || current_command.get_flag(DECLARATION_COMMAND))) {
+                next->set_flag(NO_WORD_SPLIT);
+            }
+        }
+    }
+}
+
+/**
  * @brief Insert a sequence of tokens into a vector of tokens on a given position.
  *
  * @param tokens A vector of tokens to insert into.
@@ -482,6 +517,7 @@ command split_commands(tokens_t &tokens) {
  * @see squash_tokens
  */
 void process_tokens(tokens_t &tokens) {
+    postprocess_tokens(tokens);
     expand_vars(tokens);
     substitute_commands(tokens);
     set_variables(tokens);

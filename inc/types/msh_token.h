@@ -58,6 +58,7 @@ constexpr int WORD_LIKE = 1 << 3; ///< This token is a potential argument/comman
 constexpr int NO_WORD_SPLIT = 1 << 4; ///< This token is not eligible for word splitting
 constexpr int COMMAND_SEPARATOR = 1 << 5; ///< This token separates simple commands. Used for parsing
 constexpr int REDIRECT = 1 << 6; ///< This token is a redirect. Used for parsing
+constexpr int ASSIGNMENT_WORD = 1 << 7; ///< This token is an assignment word. Used for parsing
 /** @} */
 
 /**

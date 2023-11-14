@@ -50,7 +50,7 @@ const std::map<TokenType, int> token_flags = {
         {TokenType::DQSTRING, WORD_LIKE | NO_WORD_SPLIT | VAR_EXPAND},
 #endif
         {TokenType::SQSTRING, WORD_LIKE | NO_WORD_SPLIT},
-        {TokenType::VAR_DECL,  0},
+        {TokenType::VAR_DECL,  ASSIGNMENT_WORD},
         {TokenType::SUBOPEN,   UNSUPPORTED | COMMAND_SEPARATOR},
         {TokenType::SUBCLOSE,  UNSUPPORTED},
         {TokenType::AMP,       COMMAND_SEPARATOR},

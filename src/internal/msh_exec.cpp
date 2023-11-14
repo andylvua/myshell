@@ -158,7 +158,7 @@ int msh_exec_simple(simple_command &cmd, int pipe_in = STDIN_FILENO, int pipe_ou
             cmd.undo_redirects(fd_to_close);
             return res;
         }
-        status = builtin_commands.at(cmd.argv[0])(cmd.argc, cmd.argv_c.data());
+        status = builtin_commands.at(cmd.argv[0]).func(cmd.argc, cmd.argv_c.data());
         cmd.undo_redirects(fd_to_close);
         return status;
     }
@@ -182,7 +182,7 @@ int msh_exec_simple(simple_command &cmd, int pipe_in = STDIN_FILENO, int pipe_ou
         }
 
         if (is_builtin) {
-            status = builtin_commands.at(cmd.argv[0])(cmd.argc, cmd.argv_c.data());
+            status = builtin_commands.at(cmd.argv[0]).func(cmd.argc, cmd.argv_c.data());
         } else {
             status = msh_execve(cmd.argv_c.data());
         }

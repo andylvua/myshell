@@ -7,6 +7,7 @@
 
 #include "internal/msh_error.h"
 #include "types/msh_builtin_doc.h"
+#include "types/msh_builin_command.h"
 
 #include <map>
 #include <string>
@@ -15,7 +16,7 @@
 
 using func_t = int (*)(int, char **);
 
-extern const std::map<std::string, func_t> builtin_commands;
+extern const std::map<std::string, builtin> builtin_commands;
 
 extern std::map<std::string, std::string> aliases;
 
