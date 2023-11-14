@@ -33,10 +33,31 @@
 #include <sys/wait.h>
 
 
+/**
+ * @brief Top-level command structure.
+ *
+ * Holds @c std::variant of @c simple_command_ptr and @c connection_command_ptr.
+ *
+ * On @c execute() the execution is delegated to the appropriate command using
+ * @c msh_exec_internal().
+ *
+ * @see simple_command_t
+ * @see connection_command_t
+ * @see msh_exec_internal()
+ */
 struct command {
     std::variant<simple_command_ptr, connection_command_ptr> cmd;
     int flags = 0;
 
+    /**
+     * @brief Execute the command.
+     *
+     * @param in File descriptor to use as stdin.
+     * @param out File descriptor to use as stdout
+     * @return Exit code of the command.
+     *
+     * @see msh_exec_internal()
+     */
     int execute(int in = STDIN_FILENO, int out = STDOUT_FILENO) {
         std::visit([this, &in, &out](auto &&arg) {
             if (arg) {
@@ -52,7 +73,18 @@ struct command {
 };
 
 
-using simple_command_t = struct simple_command {
+/**
+ * @brief Simple command structure.
+ *
+ * The minimal unit of execution. Requires a @c std::vector of @c tokens_t
+ * to be constructed.
+ *
+ * On @c execute() the tokens are processed and the command is executed using
+ * @c msh_exec_simple().
+ *
+ * @see msh_exec_simple()
+ */
+typedef struct simple_command {
     using args_t = std::vector<std::string>;
     using argv_c_t = std::vector<char *>;
     using redirects_t = std::vector<redirect>;
@@ -66,6 +98,13 @@ using simple_command_t = struct simple_command {
 
     explicit simple_command(tokens_t tokens) : tokens(std::move(tokens)) {}
 
+    /**
+     * @brief Construct the command.
+     *
+     * Constructs the command arguments array @c argv_c and the number of arguments @c argc.
+     *
+     * @note Should only be called after tokens processing.
+     */
     bool construct() {
         for (auto const &token: tokens) {
             if (token.get_flag(WORD_LIKE) && !token.value.empty()) {
@@ -79,6 +118,18 @@ using simple_command_t = struct simple_command {
         return (argc = static_cast<int>(argv.size())) != 0;
     }
 
+    /**
+     * @brief Perform redirections attached to the command.
+     *
+     * @param fd_to_close Vector of file descriptors to close after the command is executed.
+     * @return 0 on success, error code otherwise.
+     *
+     * @note All standard file descriptors are saved before performing the redirections.
+     * @note File descriptors opened by redirections are added to @c fd_to_close.
+     * They should be closed after the command is executed or earlier if the command fails.
+     *
+     * @see msh_redirects.h
+     */
     int do_redirects(std::vector<int> *fd_to_close) {
         if (redirects.empty()) {
             return 0;
@@ -95,6 +146,16 @@ using simple_command_t = struct simple_command {
         return 0;
     }
 
+    /**
+     * @brief Undo redirections attached to the command.
+     *
+     * @param fd_to_close Vector of file descriptors to close.
+     *
+     * @note Should be called after the command is executed or earlier if the command fails.
+     *
+     * Restores standard file descriptors and closes all file descriptors specified
+     * by @c fd_to_close.
+     */
     void undo_redirects(std::vector<int> const &fd_to_close) {
         if (redirects.empty()) {
             return;
@@ -107,6 +168,16 @@ using simple_command_t = struct simple_command {
         std::ranges::for_each(fd_to_close, close);
     }
 
+    /**
+     * @brief Execute the command.
+     *
+     * @param in File descriptor to use as stdin.
+     * @param out File descriptor to use as stdout
+     * @param flags Flags to pass to @c msh_exec_simple().
+     * @return Exit code of the command.
+     *
+     * @see msh_exec_simple()
+     */
     int execute(int in = STDIN_FILENO, int out = STDOUT_FILENO, int flags = 0) {
         try {
             process_tokens(tokens);
@@ -125,13 +196,37 @@ using simple_command_t = struct simple_command {
 
         return msh_errno;
     }
-};
+} simple_command_t;
 
-using connection_command_t = struct connection_command {
+
+/**
+ * @brief Connection command structure.
+ *
+ * Represents a connection between two commands. Holds a @c Token specifying the
+ * type of connection and two @c command structures.
+ *
+ * On @c execute() the execution is delegated to the appropriate function
+ * depending on the type of connection.
+ *
+ * @see command
+ * @see Token
+ */
+typedef struct connection_command {
     Token connector;
     command lhs;
     command rhs;
 
+    /**
+     * @brief Execute the command.
+     *
+     * @param in File descriptor to use as stdin.
+     * @param out File descriptor to use as stdout
+     * @param flags Flags to pass to the command.
+     * @return Exit code of the command.
+     *
+     * Executes the left-hand side command and then the right-hand side command
+     * with respect to the type of connection.
+     */
     int execute(int in = STDIN_FILENO, int out = STDOUT_FILENO, int flags = 0) {
         switch (connector.type) {
             using enum TokenType;
@@ -200,6 +295,18 @@ private:
         return msh_errno;
     }
 
+    /**
+     * @brief Executes sequential connections, i.e. `;`.
+     *
+     * Executes the left-hand side command and then the right-hand side command
+     * sequentially.
+     *
+     * @param in File descriptor to use as stdin.
+     * @param out File descriptor to use as stdout
+     * @param flags Flags to pass to the command.
+     *
+     * @return Exit code of the command.
+     */
     int execute_sequence(int in, int out, int flags) {
         rhs.set_flags(flags & ASYNC);
 
@@ -208,6 +315,20 @@ private:
         return msh_errno;
     }
 
+    /**
+     * @brief Executes pipeline connections, i.e. `|` and `|&`.
+     *
+     * Executes the left-hand side command and then the right-hand side command
+     * sequentially with the output of the left-hand side command piped to the
+     * input of the right-hand side command. If the connection is `|&`, the
+     * standard error of the left-hand side command is also piped.
+     *
+     * @param in File descriptor to use as stdin.
+     * @param out File descriptor to use as stdout
+     * @param flags Flags to pass to the command.
+     *
+     * @return Exit code of the command.
+     */
     int execute_pipeline(int in, int out, int flags) {
         int pipefd[2];
         if (pipe(pipefd) == -1) {
@@ -228,6 +349,6 @@ private:
         }
         return msh_errno;
     }
-};
+} connection_command_t;
 
 #endif //TEMPLATE_MSH_COMMAND_H

@@ -16,6 +16,11 @@ using status_t = enum class status {
     DONE
 };
 
+/**
+ * @brief Information about an internal process.
+ *
+ * @see msh_jobs
+ */
 struct process {
     status_t status = status::RUNNING;
     int flags = 0;
@@ -31,6 +36,11 @@ struct process {
 
     process() = default;
 
+    /**
+     * @brief Returns the status of the process as a string.
+     *
+     * @return The string representation of the process status.
+     */
     [[nodiscard]] std::string get_status() const {
         switch (status) {
             using enum status_t;

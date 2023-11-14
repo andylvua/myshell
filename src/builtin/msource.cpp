@@ -4,6 +4,11 @@
 //
 // Created by andrew on 10/8/23.
 //
+/**
+ * @file
+ * @brief Built-in command `msource`.
+ * @ingroup builtin
+ */
 
 #include "internal/msh_builtin.h"
 #include "internal/msh_utils.h"

@@ -4,6 +4,10 @@
 //
 // Created by andrew on 10/14/23.
 //
+/**
+ * @file
+ * @brief Error related utilities.
+ */
 
 #include "internal/msh_error.h"
 #include "internal/msh_exec.h"

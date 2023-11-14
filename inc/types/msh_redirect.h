@@ -19,10 +19,31 @@
 struct redirect;
 using redirects_t = std::vector<redirect>;
 
+/**
+ * @brief Structure representing a single redirectee.
+ *
+ * Holds either a file descriptor or a path to a file.
+ *
+ * @see redirect
+ */
 struct redirectee {
     int fd = -1;
     std::string path;
 
+    /**
+     * @brief Opens the redirection target.
+     *
+     * If the redirectee is a file descriptor, it is returned.
+     * If the redirectee is a path, it is opened and the file descriptor
+     * pointing to it is returned and added to @p fd_to_close.
+     *
+     * @param fd_to_close A vector of file descriptors to close.
+     * @param flags Flags to pass to open(2).
+     * @param mode Mode to pass to open(2).
+     *
+     * @return The file descriptor of the redirectee or -1 on error.
+     */
+    [[nodiscard]]
     int open_redirect(std::vector<int> *fd_to_close, int flags, int mode) const {
         int res = -1;
         if (this->fd != -1) {
@@ -41,6 +62,13 @@ struct redirectee {
     }
 };
 
+/**
+ * @brief Structure representing a single redirection.
+ *
+ * Holds two redirectees and the type of the redirection.
+ *
+ * @see redirects_t
+ */
 struct redirect {
     struct redirectee in;
     struct redirectee out;
@@ -80,6 +108,17 @@ struct redirect {
         }
     }
 
+    /**
+     * @brief Opens the redirectees with respect to the redirection type
+     * and duplicates the appropriate file descriptors.
+     *
+     * The @p fd_to_close vector is populated with any file descriptors
+     * that were opened during the redirection process.
+     *
+     * @param fd_to_close A vector of file descriptors to close.
+     *
+     * @return 0 on success, 1 on error.
+     */
     [[nodiscard]] int do_redirect(std::vector<int> *fd_to_close) const {
         if (type == NONE) {
             return 0;

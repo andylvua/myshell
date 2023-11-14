@@ -4,6 +4,10 @@
 //
 // Created by andrew on 10/8/23.
 //
+/**
+ * @file
+ * @brief Tokens processing utilities.
+ */
 
 #include "types/msh_command.h"
 #include "types/msh_variable.h"
@@ -23,12 +27,35 @@
 #include <boost/date_time.hpp>
 
 
+/**
+ * @brief Insert a sequence of tokens into a vector of tokens on a given position.
+ *
+ * @param tokens A vector of tokens to insert into.
+ * @param pos An iterator pointing to the position to insert tokens at.
+ * @param sub_tokens A vector of tokens to insert.
+ *
+ * @note The iterator is updated to point to the last inserted token. The token on the
+ * given position is erased.
+ *
+ * @see Token
+ * @see std::advance
+ */
 void insert_tokens(tokens_t &tokens, tokens_t::iterator &pos, const tokens_t &sub_tokens) {
     pos = tokens.erase(pos);
     pos = tokens.insert(pos, sub_tokens.begin(), sub_tokens.end());
     std::advance(pos, sub_tokens.size() - 1);
 }
 
+/**
+ * @brief Perform word splitting on the given input string, breaking it down into a vector of WORD tokens.
+ *
+ * @param input The input string to be split.
+ * @return A vector of WORD tokens.
+ *
+ * @note WORD tokens are separated according to the value of the IFS environment variable, if set,
+ * otherwise the delimiters are <space>, <tab> and <newline>. Embedded newlines can be removed
+ * during this operation.
+ */
 tokens_t split_words(const std::string_view input) {
     using namespace boost::algorithm;
     tokens_t tokens;
@@ -50,7 +77,7 @@ tokens_t split_words(const std::string_view input) {
 }
 
 /**
- * Sets internal variables based on VAR_DECL tokens in a vector of tokens.
+ * @brief Sets internal variables based on VAR_DECL tokens in a vector of tokens.
  *
  * Iterates through a vector of tokens, identifies VAR_DECL tokens, and sets corresponding
  * variables based on their values. If a VAR_DECL token is followed by a token flagged as WORD_LIKE
@@ -156,7 +183,8 @@ void expand_aliases(tokens_t &tokens) {
  * replacing them with their corresponding values. The expansion priority is given to internal variables.
  * If no variable with the given name is found, expansion result to an empty string.
  *
- * Tokens flagged as VAR_NO_EXPAND are not expanded.
+ * Tokens flagged as VAR_NO_EXPAND are not expanded. The word splitting is performed on the resulting
+ * string, unless the token is flagged as NO_WORD_SPLIT.
  *
  * @param tokens A vector of tokens to process and expand variables within.
  * @note Variable expansion is performed in-place, i.e. the input vector is modified.
@@ -215,6 +243,24 @@ void expand_vars(tokens_t &tokens) {
     }
 }
 
+/**
+ * @brief Perform command substitution within a vector of tokens.
+ *
+ * Iterates through a vector of tokens and replaces tokens of type COM_SUB with the output of the
+ * underlying command by executing it in a subshell.
+ *
+ * Any trailing newlines are removed from the output. The word splitting is performed on the
+ * resulting string, unless the token is flagged as NO_WORD_SPLIT.
+ *
+ * @param tokens A vector of tokens to process and substitute command substitutions within.
+ * @note Command substitution is performed in-place, i.e. the input vector is modified.
+ *
+ * @throws msh_exception if an error occurs during command execution.
+ *
+ * @see Token
+ * @see token_flags
+ * @see parse_input
+ */
 void substitute_commands(tokens_t &tokens) {
     for (auto it = tokens.begin(); it != tokens.end(); ++it) {
         auto &token = *it;
@@ -263,9 +309,9 @@ void substitute_commands(tokens_t &tokens) {
  * @brief Expand glob patterns within a vector of tokens.
  *
  * Iterates through a vector of tokens and expands glob patterns within tokens by
- * matching them against files in the file system. If no files are matched, the glob pattern is left
- * unchanged. Token with matched glob pattern is replaced with a sequence of WORD tokens
- * containing the matched file names.
+ * matching them against files in the file system. If no files are matched, the glob pattern
+ * is left unchanged. Token with matched glob pattern is replaced with a sequence of
+ * WORD tokens containing the matched file names.
  *
  * Tokens flagged as GLOB_NO_EXPAND are not expanded.
  *
@@ -324,8 +370,11 @@ void squash_tokens(tokens_t &tokens) {
 /**
  * @brief Check the syntax of a vector of tokens.
  *
+ * If syntax is incorrect, throws an exception.
+ *
  * @param tokens A vector of tokens to check.
- * @return 0 if syntax is correct, 1 otherwise.
+ *
+ * @throws msh_exception if syntax is incorrect.
  *
  * @see Token
  * @see token_flags
@@ -342,7 +391,12 @@ void check_syntax(const tokens_t &tokens) {
 }
 
 /**
- FIXME: Invalidated documentation
+ * @brief Construct a shared pointer to a simple command from a vector of tokens.
+ *
+ * @param tokens A vector of tokens to construct a simple command from.
+ * @return A shared pointer to a simple command.
+ *
+ * @see simple_command
  */
 simple_command_ptr make_simple_command(const tokens_t &tokens) {
     simple_command command(tokens);
@@ -351,7 +405,20 @@ simple_command_ptr make_simple_command(const tokens_t &tokens) {
 }
 
 /**
- FIXME: Invalidated documentation
+ * @brief Split a vector of tokens into a tree structure of commands.
+ *
+ * Each node of the tree is a command object, which can be either a simple command or
+ * a connection command. The connection command contains a connector token and two
+ * command objects, lhs and rhs. Returns the root of the tree.
+ *
+ * @note Alias expansion is performed on whole command sequence before splitting.
+ *
+ * @param tokens A vector of tokens to split.
+ * @return The root of the tree of commands.
+ *
+ * @see command
+ * @see simple_command
+ * @see connection_command
  */
 command split_commands(tokens_t &tokens) {
     expand_aliases(tokens);
@@ -389,14 +456,15 @@ command split_commands(tokens_t &tokens) {
  * Performs all necessary token processing steps in the correct order.
  *
  * @param tokens A vector of tokens to process.
- * @return 0 if syntax is correct, 1 otherwise.
  *
- * @see expand_aliases
+ * @throws msh_exception if an error occurs during token processing.
+ * Must be handled elsewhere.
+ *
  * @see expand_vars
+ * @see substitute_commands
  * @see set_variables
  * @see expand_glob
  * @see squash_tokens
- * @see check_syntax
  */
 void process_tokens(tokens_t &tokens) {
     expand_vars(tokens);

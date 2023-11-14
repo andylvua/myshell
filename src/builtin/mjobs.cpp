@@ -1,6 +1,11 @@
 //
 // Created by andrew on 11/8/23.
 //
+/**
+ * @file
+ * @brief Built-in command `mjobs`.
+ * @ingroup builtin
+ */
 
 #include "internal/msh_builtin.h"
 #include "internal/msh_jobs.h"

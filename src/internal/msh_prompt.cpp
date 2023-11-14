@@ -4,6 +4,10 @@
 //
 // Created by andrew on 10/10/23.
 //
+/**
+ * @file
+ * @brief Prompt related utilities.
+ */
 
 #include "internal/msh_prompt.h"
 #include "internal/msh_error.h"
@@ -20,17 +24,17 @@
  * This function takes a PS1 format string as input and processes escape sequences to replace them with
  * specific values. The supported escape sequences include:
  *
- * <li>\\d - The current date in YYYY-MM-DD format.</li>
- * <li>\\t - The current time in HH:MM:SS format.</li>
- * <li>\\u - The current user.</li>
- * <li>\\h - The current host.</li>
- * <li>\\w - The current working directory.</li>
- * <li>\\W - The current working directory's basename.</li>
- * <li>\\n - A newline character.</li>
- * <li>\\r - A carriage return character.</li>
- * <li>\\s - The current shell.</li>
- * <li>\\v - The current shell version.</li>
- * <li>\\$ - The prompt character.</li>
+ * <li>\\d - The current date in YYYY-MM-DD format.</li><br>
+ * <li>\\t - The current time in HH:MM:SS format.</li><br>
+ * <li>\\u - The current user.</li><br>
+ * <li>\\h - The current host.</li><br>
+ * <li>\\w - The current working directory.</li><br>
+ * <li>\\W - The current working directory's basename.</li><br>
+ * <li>\\n - A newline character.</li><br>
+ * <li>\\r - A carriage return character.</li><br>
+ * <li>\\s - The current shell.</li><br>
+ * <li>\\v - The current shell version.</li><br>
+ * <li>\\$ - The prompt character.</li><br>
  *
  * @param ps1 The PS1 format string to be expanded.
  * @return The expanded string with replaced escape sequences.

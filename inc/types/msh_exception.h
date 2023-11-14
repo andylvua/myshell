@@ -10,6 +10,11 @@
 #include <exception>
 #include <string>
 
+/**
+ * @brief Internal exception class.
+ *
+ * @see msh_error
+ */
 class msh_exception : public std::exception {
 public:
     explicit msh_exception(std::string message, msh_err err = UNKNOWN_ERROR) :

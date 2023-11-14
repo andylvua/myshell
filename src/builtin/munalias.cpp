@@ -4,6 +4,11 @@
 //
 // Created by andrew on 10/11/23.
 //
+/**
+ * @file
+ * @brief Built-in command `munalias`.
+ * @ingroup builtin
+ */
 
 #include "internal/msh_builtin.h"
 

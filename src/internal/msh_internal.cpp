@@ -4,6 +4,10 @@
 //
 // Created by andrew on 10/9/23.
 //
+/**
+ * @file
+ * @brief Internal utilities.
+ */
 
 #include "types/msh_token.h"
 #include "msh_external.h"
@@ -14,8 +18,28 @@
 #include <cstdio>
 #include <readline/history.h>
 
+/**
+ * @brief The internal variable table.
+ *
+ * Maps variable names to variable objects.
+ *
+ * @see variable
+ */
 std::vector<variable> variables;
 
+/**
+ * @brief The internal token flags table.
+ *
+ * Maps token types to their corresponding flags.
+ *
+ * @see TokenType
+ *
+ * @note Wildcard expansion is disabled for double quoted strings by default.
+ * To enable it, define ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION in CMakeLists.txt.
+ *
+ * @note Glob expansion is not performed for COMMAND tokens by default due to requirement
+ * `We ignore masks in the program name.` However, this behavior is unnatural.
+ */
 const std::map<TokenType, int> token_flags = {
         {TokenType::EMPTY,     0},
         {TokenType::WORD,      WORD_LIKE | GLOB_EXPAND | VAR_EXPAND},
@@ -44,13 +68,10 @@ const std::map<TokenType, int> token_flags = {
         {TokenType::SEMICOLON, COMMAND_SEPARATOR},
         {TokenType::COM_SUB,   WORD_LIKE},
 };
-/*NOTE:
- * For COMMAND, GLOB_NO_EXPAND flag is set due to requirement "We ignore masks in the program name."
- * However, this behavior is unnatural.
- */
 
 /**
  * @brief Get a pointer to an internal variable with the given name.
+ *
  * @param name Name of the variable.
  * @return Pointer to the variable, @c nullptr otherwise
  */
@@ -65,6 +86,7 @@ variable *get_variable(std::string_view name) {
 
 /**
  * @brief Set the value of an internal variable with the given name.
+ *
  * @param name Name of the variable.
  * @param value Value to set.
  */
@@ -80,7 +102,11 @@ void set_variable(const std::string &name, const std::string &value) {
 /**
  * @brief Initialize the shell.
  *
- * Copies the current process environment variables internally.
+ * This function should be called before any other shell functions.
+ *
+ * Sets up necessary handlers, job control, and copies the current process
+ * environment variables internally.
+ *
  * Sets the @c SHELL and @c VERSION to default values specified in msh_internal.h
  */
 void msh_init() {

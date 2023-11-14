@@ -4,6 +4,10 @@
 //
 // Created by andrew on 10/9/23.
 //
+/**
+ * @file
+ * @brief Parser related utilities.
+ */
 
 #include "internal/msh_parser.h"
 #include "internal/msh_utils.h"
@@ -13,10 +17,15 @@
 #include <stack>
 
 /**
- * Perform lexical analysis on the given input string, breaking it down into a vector of tokens.
+ * @brief Perform lexical analysis on the given input string, breaking it down into a vector of tokens.
  *
  * @param input The input string to be analyzed.
  * @return A vector of Token objects.
+ *
+ * @throws msh_exception If the input is invalid.
+ *
+ * @see parse_input()
+ * @see process_tokens()
  */
 tokens_t lexer(const std::string &input) {
     using enum TokenType;
@@ -278,19 +287,19 @@ tokens_t lexer(const std::string &input) {
 /**
  * @brief Parse the input string to prepare it for command execution.
  *
- * Performs lexical analysis
- * to tokenize the input, and checks for validity. If the input is valid, it prepares the arguments and
- * determines the execution function.
+ * Performs lexical analysis to tokenize the input, and checks for validity.
+ * If the input is valid, it prepares a @c command object using @c split_commands() function.
+ *
+ * On empty input, the default-constructed @c command object is returned.
  *
  * @param input The input string to be parsed.
- * @return A @c command object containing the arguments and execution function.
+ * @return A @c command object.
+ *
+ * @throws msh_exception If the syntax of the input is invalid or errors occur during parsing.
  *
  * @see lexer()
- * @see process_tokens()
- * @see make_simple_command()
- * @see msh_exec_simple()
- * @see internal_commands
  * @see command
+ * @see split_commands()
  */
 command parse_input(std::string input) {
     boost::trim(input);

@@ -7,6 +7,9 @@
 
 #include <string>
 
+/**
+ * @brief Internal variable structure.
+ */
 struct variable {
     std::string name;
     std::string value;

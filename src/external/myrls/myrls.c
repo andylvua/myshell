@@ -1,5 +1,10 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+/**
+ * @file
+ * @brief External ulility `myrls`.
+ * @ingroup external
+ */
 
 /*
  * myrls - a simple implementation of the ls(1) command for recursively

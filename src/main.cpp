@@ -12,7 +12,6 @@
 
 // MAYBE: Add signal handling. Also see src/internal/jobs.cpp.
 //  Possible behavior: https://www.gnu.org/software/bash/manual/html_node/Signals.html
-// MAYBE: Move `myshell` to a dedicated class. It possibly can reduce the complexity of the project.
 int main(int argc, char *argv[]) {
     msh_init();
 

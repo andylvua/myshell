@@ -7,6 +7,9 @@
 
 #include <string>
 
+/**
+ * @brief Documentation for a built-in command.
+ */
 struct builtin_doc {
     std::string name;
     std::string args;

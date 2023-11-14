@@ -4,6 +4,10 @@
 //
 // Created by andrew on 10/8/23.
 //
+/**
+ * @file
+ * @brief Execution related utilities.
+ */
 
 #include "internal/msh_utils.h"
 #include "internal/msh_exec.h"
@@ -21,7 +25,22 @@
 #define _GNU_SOURCE
 #endif
 
+/**
+ * @brief The current line number of the script being executed.
+ *
+ * Undefined if no script is being executed.
+ *
+ * @see msh_exec_script
+ */
 int exec_line_no = 0;
+
+/**
+ * @brief The path to the script being executed.
+ *
+ * Undefined if no script is being executed.
+ *
+ * @see msh_exec_script
+ */
 std::string exec_path;
 
 /**
@@ -103,6 +122,27 @@ int msh_execve(char **argv) {
     return status;
 }
 
+/**
+ * @brief Executes a simple command.
+ *
+ * @param cmd The command to execute.
+ * @param pipe_in File descriptor to use as stdin.
+ * @param pipe_out File descriptor to use as stdout.
+ * @param flags Flags to pass to the command.
+ * @return Exit status of the command or the error code if any.
+ *
+ * If the command is a builtin, it is executed directly. Otherwise, it is executed using msh_execve().
+ *
+ * If either pipe_in or pipe_out is not STDIN_FILENO or STDOUT_FILENO respectively,
+ * the command is not a builtin, or the command is executed asynchronously, the command will be
+ * executed in a forked process.
+ *
+ * If either ASYNC or FORK_NO_WAIT is set in flags, the parent process returns immediately.
+ * One should take care of the child process by calling wait_for_process() or reap_children()
+ * explicitly if needed.
+ *
+ * @see msh_execve
+ */
 int msh_exec_simple(simple_command &cmd, int pipe_in = STDIN_FILENO, int pipe_out = STDOUT_FILENO, int flags = 0) {
     int status = 0;
     bool to_fork;
@@ -164,6 +204,18 @@ int msh_exec_simple(simple_command &cmd, int pipe_in = STDIN_FILENO, int pipe_ou
     }
 }
 
+/**
+ * @brief Internal command execution function.
+ *
+ * Delegates the execution to the appropriate function based on the command type
+ * holded by the @c cmd.cmd variant object.
+ *
+ * @param cmd The command to execute.
+ * @param in File descriptor to use as stdin.
+ * @param out File descriptor to use as stdout.
+ * @param flags Flags to pass to the command.
+ * @return Exit status of the command or the error code if any.
+ */
 int msh_exec_internal(command &cmd, int in, int out, int flags) {
     return std::visit([&in, &out, &flags](auto &&arg) -> int {
         return arg->execute(in, out, flags);

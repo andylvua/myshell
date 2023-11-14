@@ -1,6 +1,10 @@
 //
 // Created by andrew on 11/8/23.
 //
+/**
+ * @file
+ * @brief Redirects related utilities.
+ */
 
 #include "internal/msh_redirects.h"
 #include "types/msh_exception.h"
@@ -8,6 +12,48 @@
 #include <algorithm>
 
 
+/**
+ * @brief Parse redirects from command's tokens.
+ *
+ * The processing is done only on the tokens with the REDIRECT flag set.
+ *
+ * The following redirects are supported:
+ * <li> Redirecting output:<br>
+ * `n>word` - Open file `word` for writing on file descriptor `n`.
+ * If `n` is omitted, it defaults to 1.
+ *
+ * <li> Appending output:<br>
+ * `n>>word` - Open file `word` for appending on file descriptor `n`.
+ * If `n` is omitted, it defaults to 1.
+ *
+ * <li> Redirecting input:<br>
+ * `n\<word` - Open file `word` for reading on file descriptor `n`.
+ * If `n` is omitted, it defaults to 0.
+ *
+ * <li> Redirecting output and error:<br>
+ * `&>word` - Redirect both standard output and standard error to file `word`.
+ * Equivalent to `>word 2>&1` and `>&word`.
+ *
+ * <li> Appending output and error:<br>
+ * `&>>word` - Append both standard output and standard error to file `word`.
+ * Semantically equivalent to `>>word 2>&1`.
+ *
+ * <li> Duplicating file descriptors:<br>
+ * `n\<&word` - The file descriptor `n` is made to be a copy of the descriptor
+ * specified by `word`. If `word` doesn't specify a descriptor, the redirection
+ * is ill-formed due to ambiguity. If `n` is not specified, the standard input
+ * (file descriptor 0) is used. If descriptor specified by `word` is not correct,
+ * the redirection error occurs. <br>
+ * `n>&word` - Used for duplicating output file descriptors. If `n` is not
+ * specified, the standard output (file descriptor 1) is used.
+ * If `word` doesn't specify a descriptor, it is interpreted as a filename to
+ * open. If the file descriptor specified by `word` is not correct, the
+ * redirection error occurs. If `n` is omitted, and `word` does not specify a
+ * file descriptor, the redirect is equivalent to `&>word`.
+ *
+ * @param tokens  The tokens to parse.
+ * @return redirects_t The structure containing the parsed redirects.
+ */
 redirects_t parse_redirects(tokens_t &tokens) {
     using std::ranges::find_if;
     using std::ranges::all_of;

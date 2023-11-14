@@ -3,6 +3,9 @@
 //
 
 /**
+ * @file
+ * @brief Job control related utilities.
+ *
  * Simplest job control implementation. Just for demonstration purposes.
  * Features only process tracking and printing.
  *
@@ -19,9 +22,21 @@
 #include <iostream>
 
 
+/**
+ * @brief The internal process table.
+ *
+ * Maps process IDs to process objects.
+ */
 std::map<pid_t, process> processes;
 
 
+/**
+ * @brief Initialize job control.
+ *
+ * Set SIGCHLD handler.
+ *
+ * @see sigchld_handler()
+ */
 void init_job_control() {
     struct sigaction sa{};
     sa.sa_handler = sigchld_handler;
@@ -33,6 +48,16 @@ void init_job_control() {
     }
 }
 
+/**
+ * @brief SIGCHLD handler.
+ *
+ * Reaps the process and updates its internal status.
+ *
+ * @see waitpid()
+ * @see set_process_status()
+ *
+ * @param signo The signal number.
+ */
 void sigchld_handler(int) {
     int status;
     pid_t pid;
@@ -45,6 +70,21 @@ void sigchld_handler(int) {
     }
 }
 
+/**
+ * @brief Wait for the process to finish.
+ *
+ * @param pid The process ID.
+ * @param status The process status.
+ * @return The process exit status.
+ *
+ * @note Call to this function leads to explicit removal of the process with matching PID
+ * from the internal process table.
+ *
+ * @note If both `WIFEXITED` and `WIFSIGNALED` are false for the process, the
+ * return value is undefined.
+ *
+ * @see remove_process()
+ */
 int wait_for_process(pid_t pid, int *status) {
     while (waitpid(pid, status, WUNTRACED | WCONTINUED) != -1) {
         if (errno != EINTR && errno != ECHILD) {
@@ -63,6 +103,16 @@ int wait_for_process(pid_t pid, int *status) {
     return *status;
 }
 
+/**
+ * @brief Wait for all background processes to finish.
+ *
+ * @return The number of reaped processes.
+ *
+ * @note All processes reaped by this function are immediately removed
+ * from the internal process table.
+ *
+ * @see remove_process()
+ */
 int reap_children() {
     int status;
     pid_t pid;
@@ -74,6 +124,11 @@ int reap_children() {
     return n;
 }
 
+/**
+ * @brief Return the number of currently running background processes.
+ *
+ * @return The number of currently running background processes.
+ */
 int no_background_processes() {
     int n = 0;
     for (auto const& [pid, process]: processes) {
@@ -84,6 +139,9 @@ int no_background_processes() {
     return n;
 }
 
+/**
+ * @brief Print all internal processes.
+ */
 void print_processes() {
     int n = 0;
     for (auto const& [pid, process]: processes) {
@@ -91,12 +149,21 @@ void print_processes() {
     }
 }
 
+/**
+ * @brief Remove all completed processes, i.e. whose status is DONE
+ * from the internal process table.
+ */
 void remove_completed_processes() {
     std::erase_if(processes, [](auto const& process) {
         return process.second.status == status::DONE;
     });
 }
 
+/**
+ * @brief Print all completed background processes.
+ *
+ * @note Only prints processes that were started asynchronously.
+ */
 void print_completed_processes() {
     int n = 0;
     for (auto const& [pid, process]: processes) {
@@ -106,19 +173,50 @@ void print_completed_processes() {
     }
 }
 
+/**
+ * @brief Update the internal process table.
+ *
+ * Is exactly equivalent to calling `print_completed_processes()`
+ * and `remove_completed_processes()` sequentially.
+ *
+ * @note This function should be called before every command execution.
+ *
+ * @see print_completed_processes()
+ * @see remove_completed_processes()
+ */
 void update_jobs() {
     print_completed_processes();
     remove_completed_processes();
 }
 
+/**
+ * @brief Add a process to the internal process table.
+ *
+ * @param pid The process ID.
+ * @param flags The process flags.
+ * @param args The process arguments.
+ *
+ * @see process()
+ */
 void add_process(pid_t pid, int flags, const std::vector<std::string>& args) {
     processes.try_emplace(pid, flags, args);
 }
 
+/**
+ * @brief Remove a process from the internal process table.
+ *
+ * @param pid The process ID.
+ */
 void remove_process(pid_t pid) {
     processes.erase(pid);
 }
 
+/**
+ * @brief Change the status of a process in the internal process table.
+ *
+ * @param pid The process ID.
+ * @param status The new process status.
+ */
 void set_process_status(pid_t pid, status_t status) {
     processes[pid].status = status;
 }
