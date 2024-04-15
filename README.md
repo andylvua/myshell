@@ -1,8 +1,4 @@
-# Lab work 6: myshell 2 - a custom shell implementation
-Authors (team): 
-- [Andrii Yaroshevych](https://github.com/andylvua)
-- [Pavlo Kryven](https://github.com/codefloww)
-- [Yurii Kharabara](https://pbs.twimg.com/media/F-bInKaWIAA2LoW?format=jpg&name=medium)
+# myshell — a custom shell implementation
 
 ## Description
 This project is a custom command-line interpreter that provides a user interface for executing commands. 
@@ -36,7 +32,7 @@ Besides, it heavily relies on the following libraries:
 
 > **Note**
 > 
-> For installation instructions, please refer to official documentation.
+> For installation instructions, please refer to the official documentation.
 
 
 ### Compilation
@@ -77,7 +73,7 @@ For exact instructions on how to add external commands, please refer to the [REA
 ### History
 
 `myshell` supports command history. Its path is predefined by the build system and is set to `{CMAKE_BINARY_DIR}/msh/.msh_history`.
-This ensures that the history file is placed in the build directory and it will not be in vain to clog the examiner's computer.
+This ensures that the history file is placed in the build directory, and it will not be in vain to clog the examiner's computer.
 Also, this allows us to use the persistent history between different runs of the shell.
 
 If you want to change the path to the history file, consider changing the `MSH_HISTORY_PATH` variable in the `CMakeLists.txt` file to your desired path.
@@ -106,7 +102,7 @@ Besides, here is a detailed description of the new features that are implemented
   * `n<&word` - The file descriptor `n` is made to be a copy of the descriptor specified by `word`. If `word` doesn't specify a descriptor, the redirection is ill-formed due to ambiguity. If `n` is not specified, the standard input (file descriptor 0) is used. If descriptor specified by `word` is not correct, the redirection error occurs. <br>
   * `n>&word` - Used for duplicating output file descriptors. If `n` is not specified, the standard output (file descriptor 1) is used. If `word` doesn't specify a descriptor, it is interpreted as a filename to open. If the file descriptor specified by `word` is not correct, the redirection error occurs. If `n` is omitted, and `word` does not specify a file descriptor, the redirect is equivalent to `&>word`.
 
-### Connections - pipelines, background, and sequential execution, logical operators
+### Connections — pipelines, background, and sequential execution, logical operators
 
 `myshell` supports the following connections:
 
@@ -117,7 +113,7 @@ Besides, here is a detailed description of the new features that are implemented
   
   The commands are executed sequentially, one after another. The shell waits for each command to finish before executing the next one.
 
-  The processing is done in left-to-right manner, i.e. the following command:
+  The processing is done in a left-to-right manner, i.e., the following command:
   ```bash
   var="world"; echo "Hello, $var"
   ```
@@ -140,7 +136,7 @@ Besides, here is a detailed description of the new features that are implemented
   <br><br>
   The shell waits for all commands to finish. However, the commands are executed asynchronously, and order of execution is undefined.<br>
   <br>
-  The exit code (`msh_errno`) after the pipeline is exacly the exit code of the last command in the pipeline.
+  The exit code (`msh_errno`) after the pipeline is exactly the exit code of the last command in the pipeline.
   
   > **Note**
   >
@@ -183,7 +179,8 @@ echo "The current working directory is $(pwd)"
 
 The command substitution is performed by enclosing the command in backticks or `$()`. Execution of the command is performed in a subshell.
 
-Any trailing newlines are removed from the output of the command substitution. Output of the command substitution is subject to word splitting and filename expansion.
+Any trailing newlines are removed from the output of the command substitution. 
+The output of the command substitution is subject to word splitting and filename expansion.
 Embedded newlines are not deleted, but they may be removed during word splitting if `IFS` contains the newline character.
 
 To prevent word splitting or filename expansion, enclose the command substitution in double quotation marks:
@@ -205,7 +202,7 @@ echo 'Hello, $(whoami)!'
 
 will print `Hello, $(whoami)!`.
 
-Quotes may appear inside the command substitution, so the following command are also supported:
+Quotes may appear inside the command substitution, so the following commands are also supported:
 ```bash
 echo "$(echo 'Mixed "Quotes" support in $SHELL')"
 echo $(echo ")")
@@ -286,7 +283,7 @@ The lexer/tokenizer is implemented in the [msh_parser.cpp](src/internal/msh_pars
 When `myshell` starts, it initializes essential configurations:
 - Initializes internal environment variables from its own environment.
 - Loads command history from the history file. Its path is determined by the build system.
-- Initializes the job control, e.g. sets up signal handlers, etc.
+- Initializes the job control, e.g., sets up signal handlers, etc.
 - Sets up other necessary configurations.
 
 **Main Loop**
@@ -306,7 +303,7 @@ The shell builds a command tree from the tokens. The command tree is a tree-like
 The alias expansion is performed during this step, i.e. on the whole command line.
 
 - Command Execution <br>
-The shell executes the command tree. Before execution of each simple command, the tokens processing is performed. This process is described in more detail in the [Command Execution](#command-execution) section.
+The shell executes the command tree. Before execution of each simple command, the token processing is performed. This process is described in more detail in the [Command Execution](#command-execution) section.
 
 
 **Cleanup**
@@ -356,7 +353,7 @@ This step involves several sub-steps:
     - _Wildcard Expansion_: Wildcard characters are expanded into their corresponding file names.
     - _Tokens Merging_: The shell merges adjacent tokens into a single token if necessary.
 
-This steps is performed by shell utilities located in the [msh_utils.cpp](src/internal/msh_utils.cpp) file.
+These steps are performed by shell utilities located in the [msh_utils.cpp](src/internal/msh_utils.cpp) file.
 
 > **Note**
 > 
@@ -367,7 +364,7 @@ The processed tokens are split into command arguments.
 
 - Command Execution <br>
 Depending on the command's nature:
-  - _Internal/Built-in Commands:_ Handled directly by the shell (e.g., changing directories or setting environment variables). If builting command is executed in a pipeline or a background, the shell treats it as a regular command and executes it in a child process as described below.
+  - _Internal/Built-in Commands:_ Handled directly by the shell (e.g., changing directories or setting environment variables). If building command is executed in a pipeline or a background, the shell treats it as a regular command and executes it in a child process as described below.
   - _External Commands:_ `myshell` spawns a child process using the `fork` system call and then executes the command in the child process via `execve`/`execvpe`.
   - _Scripts:_ `myshell` can also execute script files, treating them as sequences of commands.
 
@@ -413,42 +410,30 @@ Depending on the command's nature:
   
   Assignment statements of the form `key=value` may also appear as arguments to the `malias` and `mexport` built-in commands. Other than that, variable declarations are treated as regular arguments.
 
-## Additional Tasks
-
-Although we didn't implement any additional tasks related to `myshell 2`, we've implemented some additional features that we believe are worth mentioning:
-
-1. Full support of redirections, including appending and duplicating file descriptors.
-2. Full support of connections, including pipelines, background, and sequential execution, logical operators.
-3. Full support of command substitution, including nested command substitutions and quoting.
-4. Simple implementation of job control, including background processes and `mjobs` built-in command.
-5. Bash-like word splitting algorithms that support quoting and escaping.
-
-### Additional Tasks (myshell 1)
-
-All additional features from `Additional task 2` are supported:
+## Features
 
 1. **Double Quotation Marks Handling**: The shell supports the use of double quotation marks for processing file names and arguments with spaces.
 
-The behavior of double quotation marks is similar to that of other shells, such as bash or zsh.
-
-You can use double quotation marks inside double quotation marks by escaping them with a backslash.
+    The behavior of double quotation marks is similar to that of other shells, such as bash or zsh.
+    
+    You can use double quotation marks inside double quotation marks by escaping them with a backslash.
 
 2. **Wildcard Substitution in Double Quotes**: The shell provides the ability to perform wildcard substitution even within double quotation marks.
 
-> **Note**
-> 
-> This behavior is disabled by default. To enable it, set the `ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION` flag to `ON` in the `CMakeLists.txt` file.
-> 
-> This decision was due to the fact that this is an unexpected behavior for many shells. Neither bash nor zsh perform wildcard substitutions in double quotes.
+    > **Note**
+    > 
+    > This behavior is disabled by default. To enable it, set the `ENABLE_DOUBLE_QUOTE_WILDCARD_SUBSTITUTION` flag to `ON` in the `CMakeLists.txt` file.
+    > 
+    > This decision was due to the fact that this is an unexpected behavior for many shells. Neither bash nor zsh perform wildcard substitutions in double quotes.
 
 3. **Single Quotation Marks**: Single quotation marks function similarly to double quotes, but no variable or wildcard substitution occurs inside them.
 
-The one exception is that single quotation marks can't appear inside single quotation marks even if they are escaped.
+    The one exception is that single quotation marks can't appear inside single quotation marks even if they are escaped.
 
 4. **Escape Sequences**: We support the following escaping : `$`, `#`, <code>'\'</code>, <code>'"'</code>, and <code>"'"</code>. Escaping the corresponding characters allows them to be inserted without their special meaning.
 
-Also, other escape sequences are supported. For now, we support parsing of shell metacharacters, such as `|`, `&`, `;`, `(`, `)`, `<`, `>`, but we don't support their functionality.
-Due to this fact, `myshell` won't be able to execute commands with these tokens. If you want to use them without their special meaning, you should escape them with a backslash.
+    Also, other escape sequences are supported. For now, we support parsing of shell metacharacters, such as `|`, `&`, `;`, `(`, `)`, `<`, `>`, but we don't support their functionality.
+    Due to this fact, `myshell` won't be able to execute commands with these tokens. If you want to use them without their special meaning, you should escape them with a backslash.
 
 5. **Command Support with Equal Sign**: To support commands with an equal sign in their name, escape sequence `\=` is also supported.
 
@@ -456,39 +441,47 @@ Due to this fact, `myshell` won't be able to execute commands with these tokens.
 
 7. **Local Environment Variables**: The shell supports the creation of local environment variables using the `VAR=ABC` syntax. These variables are visible only within the shell and aren't passed to child processes. To promote a local variable to an environment variable for child processes, use the `mexport VAR` command.
 
-> **Note**
-> 
-> Variable declarations can only appear before a simple command. Otherwise, they are treated as regular arguments.
+    > **Note**
+    > 
+    > Variable declarations can only appear before a simple command. Otherwise, they are treated as regular arguments.
 
 8. **Customizable Prompt**: The shell prompt can be customized based on the `PS1` environment variable. This provides users with the flexibility to include information such as the username or the current time in the prompt.
 
-Currently, the following variables are supported:
-- `\d` - The current date in YYYY-MM-DD format.
-- `\t` - The current time in HH:MM:SS format.
-- `\u` - The current user.
-- `\h` - The current host.
-- `\w` - The current working directory.
-- `\W` - The current working directory's basename.
-- `\n` - A newline character.
-- `\r` - A carriage return character.
-- `\s` - The current shell.
-- `\v` - The current shell version.
-- `\$` - The prompt character.
+    Currently, the following variables are supported:
+    - `\d` - The current date in YYYY-MM-DD format.
+    - `\t` - The current time in HH:MM:SS format.
+    - `\u` - The current user.
+    - `\h` - The current host.
+    - `\w` - The current working directory.
+    - `\W` - The current working directory's basename.
+    - `\n` - A newline character.
+    - `\r` - A carriage return character.
+    - `\s` - The current shell.
+    - `\v` - The current shell version.
+    - `\$` - The prompt character.
 
 9. **Alias Support**: Our shell supports the creation and utilization of aliases, allowing users to define custom shortcuts for frequently used commands.
 
-Aliases are defined using the `alias` command. For example, to create an alias named `ll` for the `ls -l` command, you can use the following command:
-```bash
-alias ll="ls -l"
-```
+    Aliases are defined using the `alias` command. For example, to create an alias named `ll` for the `ls -l` command, you can use the following command:
+    ```bash
+    alias ll="ls -l"
+    ```
+    
+    To remove an alias, use the `unalias` command:
+    ```bash
+    unalias ll
+    ```
+    
+    For more information, please use the `--help` flag.
+    
+    > **Note**
+    > 
+    > Aliases can appear in alias itself. `myshell` incorporates a robust alias expansion mechanism that prevents infinite alias expansion loops.
 
-To remove an alias, use the `unalias` command:
-```bash
-unalias ll
-```
+### Additional Features
 
-For more information, please use the `--help` flag.
-
-> **Note**
-> 
-> Aliases can appear in alias itself. `myshell` incorporates a robust alias expansion mechanism that prevents infinite alias expansion loops.
+1. Full support for redirections, including appending and duplicating file descriptors.
+2. Full support for connections, including pipelines, background, and sequential execution, logical operators.
+3. Full support for command substitution, including nested command substitutions and quoting.
+4. Simple implementation of job control, including background processes and `mjobs` built-in command.
+5. Bash-like word splitting algorithms that support quoting and escaping.
